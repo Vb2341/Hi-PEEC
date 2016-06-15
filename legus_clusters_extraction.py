@@ -72,7 +72,7 @@ import pywcs
 target_dir = os.getcwd()
 
 # Location of /data directory and this code
-pydir = '/'.join(target_dir.split('/')[:-1])
+pydir = target_dir #'/'.join(target_dir.split('/')[:-1])
 
 # Open necessary packages in iraf
 iraf.noao(_doprint=0)
