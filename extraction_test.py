@@ -105,6 +105,11 @@ source =  pipeline_dir+'init/'
 destination = test_dir+'init/'
 shutil.copytree(source, destination)
 
+#copy data dir.
+source =  pipeline_dir+'data/'
+destination = test_dir+'data/'
+shutil.copytree(source, destination)
+
 #copy python file
 source =  pipeline_dir+'legus_clusters_extraction.py'
 destination = test_dir+'legus_clusters_extraction.py'
