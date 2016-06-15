@@ -20,12 +20,17 @@ import matplotlib.pyplot as plt
 import shutil
 import os
 import glob
+from time import gmtime, strftime
 
 #----------------------------------------------------------------------------------------
 
 #==============================================================================
 #INPUT PARAMETERS
 #==============================================================================
+os.system('clear')
+print('RUNNING TESTSCRIPT FOR LEGUS_CLUSTERS_EXTRACTION')
+currtime = strftime("%H:%M:%S")
+print('Starting time:{}'.format(currtime))
 
 
 target = 'NGC1614'
@@ -92,7 +97,7 @@ else:
 
 
 print('')
-print('Copying files to the test directory')
+print('Copying extraction files to the test directory')
 
 
 #copy init dir.
@@ -106,14 +111,19 @@ destination = test_dir+'legus_clusters_extraction.py'
 shutil.copyfile(source, destination)
 
 #copy imagefiles
-for filename in glob.glob(os.path.join(source_dir, '*.*')):
-    shutil.copy(filename, dest_dir)
+print('')
+print('Copying imagefiles to test directory')
+files = glob.glob(os.path.join(data_dir, '*.*'))
+i = 0
+l =len(files)
+
+printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
+for filename in files:
+    shutil.copy(filename, test_dir)
+    i+=1
+    printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
 
 
 
-img = input[3]
-extraction_image =data_dir+img
-source =  extraction_image
-destination = test_dir+img
-shutil.copyfile(source, destination)
-
+endtime = strftime("%H:%M:%S")
+print('Ending time:{}'.format(endtime))
