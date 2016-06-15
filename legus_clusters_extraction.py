@@ -124,7 +124,7 @@ useraperture = input[5].strip()
 if useraperture not in ['4.0','5.0','6.0']:
     print 'Chosen aperture radius is not supported.'
     print 'Please choose 4.0, 5.0, or 6.0 pixels.'
-    sys.ext('Quitting...')
+    sys.exit('Quitting...')
 
 print 'step 3 : ', input[6].strip()
 flagstep3 = input[6].strip()
