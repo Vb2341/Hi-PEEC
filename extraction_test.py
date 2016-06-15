@@ -32,7 +32,6 @@ print('RUNNING TESTSCRIPT FOR LEGUS_CLUSTERS_EXTRACTION')
 currtime = strftime("%H:%M:%S")
 print('Starting time:{}'.format(currtime))
 
-
 target = 'NGC1614'
 print('')
 print('Object currently selected: {}'.format(target))
@@ -41,17 +40,11 @@ edit = raw_input('Do you wish to change this? (y/n)(n)')
 if (edit == 'y'):
     target = raw_input('New target:')
 
-
 #Set directories
 current_dir = os.getcwd()
-
 pipeline_dir = '/home/user/Hi-PEEC/Pipeline/'
-
 data_dir = '/home/user/Hi-PEEC/Data/{}/'.format(target)
-
 test_dir = '/home/user/Hi-PEEC/Extraction_test/'
-
-
 
 
 #Load and show input file parameters.
@@ -74,18 +67,16 @@ edit = raw_input('Do you wish to edit these settings? (y/n)(n)')
 if (edit == 'y'):
     os.system('vim ' + pipeline_dir + inputfile)
 
-
-
-
-
-
 #==============================================================================
 #MAINSECTION
 #==============================================================================
 
 #Clear directory?
 def resetdir():
-    #Clear old test and recreate directory
+    """Function for clearing old tests and recreating directory
+    Removes old test directory and then recreates it, copying over all necessary files
+    from Pipeline and Data directories
+    """
 
     print('')
     print('Clearing and creating directories')
