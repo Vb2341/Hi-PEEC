@@ -110,6 +110,17 @@ source =  pipeline_dir+'legus_clusters_extraction.py'
 destination = test_dir+'legus_clusters_extraction.py'
 shutil.copyfile(source, destination)
 
+#copy inputfile
+source =  pipeline_dir+'legus_clusters_extraction.input'
+destination = test_dir+'legus_clusters_extraction.input'
+shutil.copyfile(source, destination)
+
+#copy IRAF login.cl
+source =  pipeline_dir+'login.cl'
+destination = test_dir+'login.cl'
+shutil.copyfile(source, destination)
+
+
 #copy imagefiles
 print('')
 print('Copying imagefiles to test directory')
@@ -125,5 +136,23 @@ for filename in files:
 
 
 
+
+#==============================================================================
+#RUN THE EXTRACTION PIPELINE
+#==============================================================================
+print('------------------------------------------------------------------------')
+print('')
+print('Running the LEGUS extraction pipeline')
+print('')
+
+os.chdir(test_dir)
+os.system('python legus_clusters_extraction.py')
+
+
+
+
+print('')
+print('------------------------------------------------------------------------')
+print('')
 endtime = strftime("%H:%M:%S")
 print('Ending time:{}'.format(endtime))
