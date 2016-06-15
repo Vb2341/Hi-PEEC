@@ -1,15 +1,15 @@
-ngc1614                      		# 1 target unique identifier
-67.8	                     		# 2 distance to target in units of Mpc
-yes                          		# 3 (yes/no)      step 1
-F555W_hipeec_WFC3_UVIS_drc.fits		# 4 sextractor input image
-no                           		# 5 (yes/no)      step 2
-4.0                          		# 6  aperture radius (<7 pixels)
-no                           		# 7 (yes/no)      step 3
-1.4                          		# 8 concentration index value
-no                           		# 9 (yes/no)      step 4 
--0.5								# 10 upper limit for average apcorr
--1.2								# 11 lower limit for average apcorr
-no                           		# 12 (yes/no)     step 5 
-no									# 13 (yes/no)	  step 6
-no									# 14 additional sources coordinates file
-no									# 15 smoothed image for cluster centering
+ngc1614                             # 1 target unique identifier
+67.8                                # 2 distance to target in units of Mpc
+yes                                 # 3 (yes/no)      step 1
+F555W_hipeec_WFC3_UVIS_drc.fits     # 4 sextractor input image
+no                                  # 5 (yes/no)      step 2
+4.0                                 # 6  aperture radius (<7 pixels)
+no                                  # 7 (yes/no)      step 3
+1.4                                 # 8 concentration index value
+no                                  # 9 (yes/no)      step 4 
+-0.5                                # 10 upper limit for average apcorr
+-1.2                                # 11 lower limit for average apcorr
+no                                  # 12 (yes/no)     step 5 
+no                                  # 13 (yes/no)     step 6
+no                                  # 14 additional sources coordinates file
+no                                  # 15 smoothed image for cluster centering
