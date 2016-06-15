@@ -83,61 +83,64 @@ if (edit == 'y'):
 #MAINSECTION
 #==============================================================================
 
-#Clear directory
-#Clear old test and recreate directory
-
+#Clear directory?
 print('')
-print('Clearing and creating directories')
+clear = raw_input('Do you wish to clear the test directory before running? (y/n)(n)')
+if (clear == 'y'):
+    #Clear old test and recreate directory
 
-if os.path.exists(test_dir) == False:
-    os.makedirs(test_dir)
-else:
-    os.system('rm -r '+test_dir)
-    os.makedirs(test_dir)
+    print('')
+    print('Clearing and creating directories')
 
-
-print('')
-print('Copying extraction files to the test directory')
-
-
-#copy init dir.
-source =  pipeline_dir+'init/'
-destination = test_dir+'init/'
-shutil.copytree(source, destination)
-
-#copy data dir.
-source =  pipeline_dir+'data/'
-destination = test_dir+'data/'
-shutil.copytree(source, destination)
-
-#copy python file
-source =  pipeline_dir+'legus_clusters_extraction.py'
-destination = test_dir+'legus_clusters_extraction.py'
-shutil.copyfile(source, destination)
-
-#copy inputfile
-source =  pipeline_dir+'legus_clusters_extraction.input'
-destination = test_dir+'legus_clusters_extraction.input'
-shutil.copyfile(source, destination)
-
-#copy IRAF login.cl
-source =  pipeline_dir+'login.cl'
-destination = test_dir+'login.cl'
-shutil.copyfile(source, destination)
+    if os.path.exists(test_dir) == False:
+        os.makedirs(test_dir)
+    else:
+        os.system('rm -r '+test_dir)
+        os.makedirs(test_dir)
 
 
-#copy imagefiles
-print('')
-print('Copying imagefiles to test directory')
-files = glob.glob(os.path.join(data_dir, '*.*'))
-i = 0
-l =len(files)
+    print('')
+    print('Copying extraction files to the test directory')
 
-printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
-for filename in files:
-    shutil.copy(filename, test_dir)
-    i+=1
+
+    #copy init dir.
+    source =  pipeline_dir+'init/'
+    destination = test_dir+'init/'
+    shutil.copytree(source, destination)
+
+    #copy data dir.
+    source =  pipeline_dir+'data/'
+    destination = test_dir+'data/'
+    shutil.copytree(source, destination)
+
+    #copy python file
+    source =  pipeline_dir+'legus_clusters_extraction.py'
+    destination = test_dir+'legus_clusters_extraction.py'
+    shutil.copyfile(source, destination)
+
+    #copy inputfile
+    source =  pipeline_dir+'legus_clusters_extraction.input'
+    destination = test_dir+'legus_clusters_extraction.input'
+    shutil.copyfile(source, destination)
+
+    #copy IRAF login.cl
+    source =  pipeline_dir+'login.cl'
+    destination = test_dir+'login.cl'
+    shutil.copyfile(source, destination)
+
+
+    #copy imagefiles
+    print('')
+    print('Copying imagefiles to test directory')
+    files = glob.glob(os.path.join(data_dir, '*.*'))
+    i = 0
+    l =len(files)
+
     printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
+    for filename in files:
+        shutil.copy(filename, test_dir)
+        i+=1
+        printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
 
 
 
