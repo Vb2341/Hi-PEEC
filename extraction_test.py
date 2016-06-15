@@ -84,9 +84,7 @@ if (edit == 'y'):
 #==============================================================================
 
 #Clear directory?
-print('')
-clear = raw_input('Do you wish to clear the test directory before running? (y/n)(n)')
-if (clear == 'y'):
+def resetdir():
     #Clear old test and recreate directory
 
     print('')
@@ -142,6 +140,13 @@ if (clear == 'y'):
         i+=1
         printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
 
+if os.path.exists(test_dir) == False:
+    resetdir()
+else:
+    print('')
+    clear = raw_input('Do you wish to clear the test directory before running? (y/n)(n)')
+    if (clear == 'y'):
+        resetdir()
 
 
 
