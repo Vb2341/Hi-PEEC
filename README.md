@@ -33,10 +33,8 @@ This repo contains the code for cluster extraction in Hi-PEEC and primarily the 
 ###How to run the test software###
 1. Set up above folder structure
 
-2. run 
-```
-python extraction.py
-```
+2. run ```python extraction.py``` in a terminal
+
 3. This will display a prompt where you are asked to select the object. This object name must match of the  ```/Object/``` filenames above.
 
 4. Next the program will display the contents of the legus_clusters_extraction.input file and ask if you want to change any settings. If the answer is yes the program will open vim allowing you to change the inputfile.
