@@ -7,9 +7,9 @@ no                                  # 5 (yes/no)      step 2
 no                                  # 7 (yes/no)      step 3
 1.4                                 # 8 concentration index value
 no                                  # 9 (yes/no)      step 4 
--0.5                                # 10 upper limit for average apcorr
--1.2                                # 11 lower limit for average apcorr
-no                                  # 12 (yes/no)     step 5 
-no                                  # 13 (yes/no)     step 6
-no                                  # 14 additional sources coordinates file
-no                                  # 15 smoothed image for cluster centering
+-0.5                                # 10 upper limit for avg aperture correction (may need to be less negative for more distant galaxies)
+-1.2                                # 11 lower limit for avg aperture correction (may need to be more negative for very nearby galaxies)
+no                                  # 12 (yes/no)      step 5 
+no                                  # 13 (yes/no)      step 6 
+additional.coo                      # 14 additional clusters coordinate file (place in target directory)
+none                                # 15 smoothed image for additional cluster centering (should be located in /img directory)
