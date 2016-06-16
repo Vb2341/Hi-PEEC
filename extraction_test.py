@@ -20,25 +20,30 @@ import matplotlib.pyplot as plt
 import shutil
 import os
 import glob
-from time import gmtime, strftime
+from time import strftime
+import datetime
 
 #----------------------------------------------------------------------------------------
+os.system('clear')
+print('RUNNING TESTSCRIPT FOR LEGUS_CLUSTERS_EXTRACTION')
+currtime = strftime("%H:%M:%S")
+start = datetime.datetime.now()
+print('Starting time: {}'.format(currtime))
+
 
 #==============================================================================
 #INPUT PARAMETERS
 #==============================================================================
-os.system('clear')
-print('RUNNING TESTSCRIPT FOR LEGUS_CLUSTERS_EXTRACTION')
-currtime = strftime("%H:%M:%S")
-print('Starting time:{}'.format(currtime))
 
 target = 'NGC1614'
+#Check if target is correctly set:
 print('')
 print('Object currently selected: {}'.format(target))
 
 edit = raw_input('Do you wish to change this? (y/n)(n)')
 if (edit == 'y'):
     target = raw_input('New target:')
+
 
 #Set directories
 current_dir = os.getcwd()
@@ -58,20 +63,19 @@ print('------------------------------------------------------------------------'
 with open(pipeline_dir + inputfile) as f:
     print(f.read())
 
-
 print('------------------------------------------------------------------------')
 print('')
 
-
+#Allow user to change the inputs
 edit = raw_input('Do you wish to edit these settings? (y/n)(n)')
 if (edit == 'y'):
     os.system('vim ' + pipeline_dir + inputfile)
 
 #==============================================================================
-#MAINSECTION
+#SETUP DIRECTORIES
 #==============================================================================
 
-#Clear directory?
+#Function for resetting the dirs.
 def resetdir():
     """Function for clearing old tests and recreating directory
     Removes old test directory and then recreates it, copying over all necessary files
@@ -131,6 +135,8 @@ def resetdir():
         i+=1
         printProgress(i, l, prefix = ' Progress:', suffix = 'Complete', barLength = 50)
 
+
+#Clear directory?
 if os.path.exists(test_dir) == False:
     resetdir()
 else:
@@ -159,4 +165,9 @@ print('')
 print('------------------------------------------------------------------------')
 print('')
 endtime = strftime("%H:%M:%S")
-print('Ending time:{}'.format(endtime))
+stop = datetime.datetime.now()
+elapsed = stop-start
+
+print('Ending time: {}'.format(endtime))
+print('')
+print('Total runtime: {}'.format(elapsed))
