@@ -1,10 +1,15 @@
-ngc628c                      # 1 target unique identifier
-9.9		                     # 2 distance to target in units of Mpc
-no                           # 3 (yes/no)      step 1
-ngc628c_white_dualpop.fits   # 4 sextractor input image
-no                           # 5 (yes/no)      step 2
-4.0                          # 6  aperture radius (<7 pixels)
-no                           # 7 (yes/no)      step 3
-1.4                          # 8 concentration index value
-no                           # 9(yes/no)       step 4 
-no                           # 10 (yes/no)      step 5 
+ngc1614                             # 1 target unique identifier
+67.8                                # 2 distance to target in units of Mpc
+yes                                 # 3 (yes/no)      step 1
+F555W_hipeec_WFC3_UVIS_drc.fits     # 4 sextractor input image
+no                                  # 5 (yes/no)      step 2
+4.0                                 # 6  aperture radius (<7 pixels)
+no                                  # 7 (yes/no)      step 3
+1.4                                 # 8 concentration index value
+no                                  # 9 (yes/no)      step 4 
+-0.5                                # 10 upper limit for avg aperture correction (may need to be less negative for more distant galaxies)
+-1.2                                # 11 lower limit for avg aperture correction (may need to be more negative for very nearby galaxies)
+no                                  # 12 (yes/no)      step 5 
+no                                  # 13 (yes/no)      step 6 
+additional.coo                      # 14 additional clusters coordinate file (place in target directory)
+none                                # 15 smoothed image for additional cluster centering (should be located in /img directory)
