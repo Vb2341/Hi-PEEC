@@ -11,8 +11,11 @@ This repo contains the code for cluster extraction in Hi-PEEC and primarily the 
 #!python
 
 /Data/
-    /Object/
+    /Object1/
         -fitsfiles
+    /Object2/
+        -fitsfiles
+    ....
 /Pipeline/
     /init/
         default.nnw
@@ -34,7 +37,7 @@ This repo contains the code for cluster extraction in Hi-PEEC and primarily the 
 ```
 python extraction.py
 ```
-3. This will display a prompt where you are asked to select the object. This object name must match the filename ```/Object/``` above.
+3. This will display a prompt where you are asked to select the object. This object name must match of the  ```/Object/``` filenames above.
 
 4. Next the program will display the contents of the legus_clusters_extraction.input file and ask if you want to change any settings. If the answer is yes the program will open vim allowing you to change the inputfile.
 
