@@ -1,6 +1,5 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
 
 ### What is this repository for? ###
 This repo contains the code for cluster extraction in Hi-PEEC and primarily the scripts for running tests on the extraction.
