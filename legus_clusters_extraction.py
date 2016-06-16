@@ -318,8 +318,12 @@ if  flagstep1 == 'yes':
 #####  Pick reference filter  #####
 
     # Find reference image, f555w or f606w
-    image1 = glob.glob(target_dir + '/img/*f555w_sci.fits')
-    image2 = glob.glob(target_dir + '/img/*f606w_sci.fits')
+    #image1 = glob.glob(target_dir + '/img/*f555w_sci.fits')
+    #image2 = glob.glob(target_dir + '/img/*f606w_sci.fits')
+
+    image1 = glob.glob(target_dir + '/img/*555*.fits')
+    image2 = glob.glob(target_dir + '/img/*606*.fits')
+
 
     if len(image1) + len(image2) == 0:
         sys.exit('reference image is missing')
