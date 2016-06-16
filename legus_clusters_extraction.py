@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """
+
 Code used to extract a candidate list of clusters in LEGUS images
 based on a magnitude cut and a concentration index cut.
 Read the tutorial [legus_clusters_extraction.pdf]
