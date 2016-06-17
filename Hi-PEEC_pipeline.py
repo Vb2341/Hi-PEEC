@@ -56,13 +56,6 @@ print ''
 # Location of python code
 pydir = os.getcwd()
 
-
-# Open necessary packages in iraf
-iraf.noao(_doprint=0)
-iraf.digiphot(_doprint=0)
-iraf.obsutil(_doprint=0)
-iraf.daophot(_doprint=0)
-
 # Define input file
 infile = 'Hi-PEEC_settings.input'
 
@@ -111,7 +104,14 @@ print '_______________________________________________________________________'
 #==============================================================================
 
 #Setting up folder structure at desired location
-filemanagement.setup(userinput, pydir)
+if userinput['SETUP']:
+    filemanagement.setup(userinput, pydir)
 
 #Running initial extraction
-extraction.extraction(userinput)
+if userinput['EXTRACT']:
+    extraction.extraction(userinput)
+
+# Running initial photometry on the isolated stars
+if userinput['DO_PHOT']:
+    extraction.photometry(userinput, userinput['IMAGE'],
+                          userinput['STARS'], 'stars.mag', '3.0' )

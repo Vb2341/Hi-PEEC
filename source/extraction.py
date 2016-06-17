@@ -34,6 +34,12 @@ from pyraf import iraf
 import pywcs
 #------------------------------------------------------------------------------
 
+iraf.noao(_doprint=0)
+iraf.digiphot(_doprint=0)
+iraf.obsutil(_doprint=0)
+iraf.daophot(_doprint=0)
+
+
 # Set science sky annulus and width here so that they can be changed
 # without hunting for them
 annulus_sci = 7.0
@@ -103,25 +109,75 @@ def extraction(userinputs):
     print ''
 
 
-def photometry(userinputs,catalog,outputname):
+def photometry(userinputs, image, catalog, outputname, apertures):
+    """Function for performing IRAF photometry
+    @Params:
+    userinputs  (dict)  - dictionary with results from the user input file.
+    image       (STR)   - fitsfile we want to do photometry on
+    catalog     (STR)   - input coordinates where we want to do photometry
+    outputname  (STR)   - name of the file where we store the measured results
+    apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
+    """
+    #set directory
+    target_dir = userinputs['OUTDIR']
+
+    #Update passed names  to be full paths
+    image = glob.glob(target_dir + '/img/' + image)
+    if len(image)==0:
+        sys.exit('Selected image does not exist')
+    else:
+        image = image[0]
+
+    catalog = target_dir + '/init/' + catalog
+    outputname = target_dir + '/photometry/' + outputname
+
 
     #Load zeropoints
-    inst_zp, filter_zp, zp_zp = np.loadtxt(pydir + '/data/legus_zeropoints.tab', unpack=True, dtype='str')
+    inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
 
-    #Get list of imagefiles
-    imlist = glob.glob(target_dir + '/img/*_sci.fits')
-
-    # Finds the full path of reference image from the filter
-    ref_image = userinputs['OUTDIR'] + '/img/' + userinputs['IMAGE']
+    #get filtername from imagename
+    filter = image.split('/')[-1].split('_')[0]
 
 
     # Set the necessary variables for photometry on the reference image
-    ref_exptime = pyfits.getheader(ref_image)['EXPTIME']
-    ref_inst = pyfits.getheader(ref_image)['INSTRUME']
-    ref_inst = ref_inst.lower()
+    exptime = pyfits.getheader(image)['EXPTIME']
+    inst = pyfits.getheader(image)['INSTRUME']
+    inst = inst.lower()
 
-    match = (inst_zp == ref_inst) & (filter_zp == ref_filter)
-    ref_zp = zp_zp[match]
+    match = (inst_zp == inst) & (filter_zp == filter.lower())
+    zp = zp_zp[match]
+    print zp
 
-    # ref_zp is a string within an array, so need to turn into a float
-    ref_zp = float(ref_zp[0])
+    # zp is a string within an array, so need to turn into a float
+    zp = float(zp[0])
+
+    # Remove output file if it already exists
+    if os.path.exists(outputname) == True:
+        os.remove(outputname)
+
+    # Run photometry
+    iraf.datapars.epadu = exptime
+
+    iraf.centerpars.calgorithm = 'centroid'
+
+    iraf.fitskypars.annulus = userinputs['ANNULUS']
+    iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
+
+    iraf.photpars.apertures = apertures
+    iraf.photpars.zmag = zp
+
+    iraf.phot(image, catalog, outputname)
+
+    # Move phot results to new files, remove INDEFs
+    fullcat_mag_short = target_dir + '/photometry/ci_fullcat_short.mag'
+
+    cmd = 'grep "*" ' + outputname + ' > ' + fullcat_mag_short
+    os.system(cmd)
+
+    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
+    os.system(cmd)
+
+    # Remove .bak files to prevent confusion
+    bak_fullcat = fullcat_mag_short + '.bak'
+    os.remove(bak_fullcat)
+

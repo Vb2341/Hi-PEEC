@@ -47,8 +47,8 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 2, bar
     filledLength    = int(round(barLength * iteration / float(total)))
     percents        = round(100.00 * (iteration / float(total)), decimals)
     bar             = '#' * filledLength + '-' * (barLength - filledLength)
-    Sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, bar, percents, '%', suffix)),
-    Sys.stdout.flush()
+    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, bar, percents, '%', suffix)),
+    sys.stdout.flush()
     if iteration == total:
         print("\n")
 
@@ -103,6 +103,7 @@ def setup(userinputs,pydir):
 
         #print progressbar
         i=0
+        l = len(imlist)
         printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
 
         for impath in imlist:
