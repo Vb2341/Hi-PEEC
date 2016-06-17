@@ -1,15 +1,54 @@
-ngc1614                             # 1 target unique identifier
-67.8                                # 2 distance to target in units of Mpc
-yes                                 # 3 (yes/no)      step 1
-F555W_hipeec_WFC3_UVIS_drc.fits     # 4 sextractor input image
-no                                  # 5 (yes/no)      step 2
-4.0                                 # 6  aperture radius (<7 pixels)
-no                                  # 7 (yes/no)      step 3
-1.4                                 # 8 concentration index value
-no                                  # 9 (yes/no)      step 4 
--0.5                                # 10 upper limit for avg aperture correction (may need to be less negative for more distant galaxies)
--1.2                                # 11 lower limit for avg aperture correction (may need to be more negative for very nearby galaxies)
-no                                  # 12 (yes/no)      step 5 
-no                                  # 13 (yes/no)      step 6 
-additional.coo                      # 14 additional clusters coordinate file (place in target directory)
-none                                # 15 smoothed image for additional cluster centering (should be located in /img directory)
+#INPUT CONFIG FILE FOR Hi-PEEC CLUSTER EXTRACTION PIPELINE
+
+
+#TARGET PARAMS
+#label      value                               description
+#---------------------------------------------------------------------------------------
+TARGET      ngc1614                             # 1 target unique identifier
+DISTANCE    67.8                                # 2 distance to target in units of Mpc
+#---------------------------------------------------------------------------------------
+
+
+#Running folder setup
+#---------------------------------------------------------------------------------------
+SETUP       True                                # 3 set up directories etc? (True/False)
+DATA        /home/user/Hi-PEEC/Data             # 4 Directory where image files are located                                     
+#---------------------------------------------------------------------------------------
+
+
+#Extraction parameters
+#---------------------------------------------------------------------------------------
+EXTRACT     True                                # 5 Run source extraction   (True/False)
+IMAGE       F555W_hipeec_WFC3_UVIS_drc.fits     # 6 Sextractor input image
+DO_PHOT     True                                # 7 (yes/no)      step 2
+AP_RAD      4.0                                 # 8  aperture radius (<7 pixels)
+#---------------------------------------------------------------------------------------
+
+
+#Aperture correction parameters:
+#---------------------------------------------------------------------------------------
+APCORR      True                                # 9 Run aperture correction step
+STARS	    foregroundstars.coo                 # 10 File containing isolated star coords (xy) 
+#---------------------------------------------------------------------------------------
+
+#Catalog cleanup
+#---------------------------------------------------------------------------------------
+MAGERR      1                                   # 11 Level for photometry error cut
+#---------------------------------------------------------------------------------------
+
+#Cleanup
+#---------------------------------------------------------------------------------------
+CLEAN      True                                 # 12 Run the directory cleaning step(True/False)
+#---------------------------------------------------------------------------------------
+
+
+
+#no                                  # 7 (yes/no)      step 3
+#1.4                                 # 8 concentration index value
+#no                                  # 9 (yes/no)      step 4 
+#-0.5                                # 10 upper limit for avg aperture correction (may need to be less negative for more distant galaxies)
+#-1.2                                # 11 lower limit for avg aperture correction (may need to be more negative for very nearby galaxies)
+#no                                  # 12 (yes/no)      step 5 
+#no                                  # 13 (yes/no)      step 6 
+#additional.coo                      # 14 additional clusters coordinate file (place in target directory)
+#none                                # 15 smoothed image for additional cluster centering (should be located in /img directory)

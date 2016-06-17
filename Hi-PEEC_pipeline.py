@@ -17,7 +17,7 @@
 #import packages
 #------------------------------------------------------------------------------
 # compensation for main diffs between Python 2.7 and 3
-from __future__ import division,print_function
+from __future__ import division#,print_function
 
 #import math, datahandling and plotting utils
 import numpy as np
@@ -31,6 +31,7 @@ import time
 import shutil
 import sys
 import string
+import ast
 
 #astronomy utils
 import pyfits, pdb
@@ -42,8 +43,11 @@ import pywcs
 #==============================================================================
 #READ INPUT FILE
 #==============================================================================
-
-
+os.system('clear')
+print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
+print 'Version 0.1'
+print 'Last changed: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
+print ''
 # Location of target directory (should be current directory)
 target_dir = os.getcwd()
 
@@ -59,87 +63,31 @@ iraf.daophot(_doprint=0)
 # Define input file
 infile = 'Hi-PEEC_settings.input'
 
-# Verify that input file exists and load it in
+# Verify that input file exists
 if os.path.exists(target_dir + '/' + infile) == False:
     print ''
     print 'File ', infile, ' could not be found in ', target_dir
     sys.exit('quitting now...')
 
-userinput = np.genfromtxt(infile,)
+#Read in file
+raw_userinput = np.genfromtxt(infile, dtype=None)
 
-# Read in and print contents of input file
-print ''
+#convert the input matrix to a dictionary for easy access to the inputs
+userinput = dict(zip(raw_userinput[:,0], raw_userinput[:,1]))
+
+#Convert from strings to the true datatypes.
+for key in userinput:
+	try:
+		userinput[key] = ast.literal_eval(str(userinput[key]))
+	except:
+		userinput[key] = str(userinput[key])
+
+
+# Print contents of input file
+print 'Submitted inputs:'
 print '________________________________________________________________________________________'
 print ''
-
-print 'target name : ', input[0]
-target = input[0].strip()
-
-print 'target distance : ', input[1]
-distance = input[1].strip()
-
-print 'step 1 : ', input[2].strip()
-flagstep1 = input[2].strip()
-
-if flagstep1 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 3')
-
-print 'sextractor image : ', input[3].strip()
-seximage = input[3].strip()
-
-print 'step 2 : ', input[4].strip()
-flagstep2 = input[4].strip()
-
-if flagstep2 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 4')
-
-print 'aperture radius : ', input[5].strip()
-useraperture = input[5].strip()
-
-
-if useraperture not in ['4.0','5.0','6.0']:
-    print 'Chosen aperture radius is not supported.'
-    print 'Please choose 4.0, 5.0, or 6.0 pixels.'
-    sys.exit('Quitting...')
-
-print 'step 3 : ', input[6].strip()
-flagstep3 = input[6].strip()
-
-if flagstep3 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 6')
-
-print 'CI : ', input[7].strip()
-ci = input[7].strip()
-
-print 'step 4 : ', input[8].strip()
-flagstep4 = input[8].strip()
-
-if flagstep4 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 7')
-
-print 'upper limit for avg apcorr : ', input[9].strip()
-uplim_apcor = float(input[9].strip())
-
-print 'lower limit for avg apcorr : ', input[10].strip()
-lolim_apcor = float(input[10].strip())
-
-print 'step 5 : ',  input[11].strip()
-flagstep5 = input[11].strip()
-
-if flagstep5 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 12')
-
-print 'step 6 : ', input[12].strip()
-flagstep6 = input[12].strip()
-
-if flagstep6 not in ('yes', 'no', 'YES', 'NO'):
-    sys.exit('Wrong input in line 11')
-
-print 'additional sources coordinates file: ', input[13].strip()
-inputlist = input[13].strip()
-
-print 'smoothed image for cluster centering: ', input[14].strip()
-smooth_image = input[14].strip()
-
+for key in userinput:
+	print '{}:  {}'.format(key,userinput[key])
 print ''
 print '________________________________________________________________________________________'
