@@ -1,8 +1,8 @@
 #INPUT CONFIG FILE FOR Hi-PEEC CLUSTER EXTRACTION PIPELINE
 
-
-#TARGET PARAMS
 #label      value                               description
+
+#Target params
 #---------------------------------------------------------------------------------------
 TARGET      ngc1614                             # 1 target unique identifier
 DISTANCE    67.8                                # 2 distance to target in units of Mpc
@@ -14,7 +14,7 @@ DISTANCE    67.8                                # 2 distance to target in units 
 SETUP       True                                # 3 set up directories etc? (True/False)
 DATA        /home/user/Hi-PEEC/Data/NGC1614     # 4 Directory where image files are located
 OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory. If same as current 
-						# working dir. put False. (directory/False)
+						# working dir put False. (directory/False)
                               
 #---------------------------------------------------------------------------------------
 

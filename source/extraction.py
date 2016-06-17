@@ -146,7 +146,6 @@ def photometry(userinputs, image, catalog, outputname, apertures):
 
     match = (inst_zp == inst) & (filter_zp == filter.lower())
     zp = zp_zp[match]
-    print zp
 
     # zp is a string within an array, so need to turn into a float
     zp = float(zp[0])
