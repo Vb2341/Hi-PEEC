@@ -40,7 +40,7 @@ import pywcs
 
 #Import Hi-PEEC modules
 sys.path.insert(0, './source/')
-import setup
+import filemanagement
 #------------------------------------------------------------------------------
 
 
@@ -53,11 +53,10 @@ print 'Version 0.1'
 print 'Last changed: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
 
-# Location of target directory (should be current directory)
-target_dir = os.getcwd()
+# Location of python code
+pydir = os.getcwd()
 
-# Location of /data directory and this code
-pydir = target_dir 		#'/'.join(target_dir.split('/')[:-1])
+
 
 # Open necessary packages in iraf
 iraf.noao(_doprint=0)
@@ -101,3 +100,4 @@ print '_______________________________________________________________________'
 #RUNNING THE PIPELINE
 #==============================================================================
 
+filemanagement.setup(userinput,pydir)
