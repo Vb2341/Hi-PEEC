@@ -137,6 +137,14 @@ def setup(userinputs,pydir):
     destination = target_dir + '/s_extraction/default.nnw'
     shutil.copyfile(source, destination)
 
+    #copy the file for star coordinates to photometry folder
+    source = pydir + '/init/' + userinputs['STARS']
+    if os.path.exists(source) == False:
+        sys.exit("Coordinate file for isolated stars (keyword 'STARS')\
+         was not found in the /init/ directory. Please add this file")
+    else:
+        destination = target_dir + '/photometry/' + userinputs['STARS']
+        shutil.copyfile(source, destination)
 
 def cleanup():
     pass
