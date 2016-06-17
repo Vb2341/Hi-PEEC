@@ -33,17 +33,34 @@ import pyfits
 
 #------------------------------------------------------------------------------
 
+def printProgress (iteration, total, prefix = '', suffix = '', decimals = 2, barLength = 100):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : number of decimals in percent complete (Int)
+        barLength   - Optional  : character length of bar (Int)
+    """
+    filledLength    = int(round(barLength * iteration / float(total)))
+    percents        = round(100.00 * (iteration / float(total)), decimals)
+    bar             = '#' * filledLength + '-' * (barLength - filledLength)
+    Sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, bar, percents, '%', suffix)),
+    Sys.stdout.flush()
+    if iteration == total:
+        print("\n")
+
 
 def setup(userinputs,pydir):
-    #setup directory paths
-    if userinputs['OUTDIR']==False:
-        target_dir = os.getcwd()
-    else:
-        target_dir = userinputs['OUTDIR']
 
+    target_dir = userinputs['OUTDIR']
 
-
+    print ''
     print 'Creating directories ...'
+    print ''
+
     #Create required directories
     if os.path.exists(target_dir + '/s_extraction') == False:
         os.makedirs(target_dir + '/s_extraction')
@@ -67,10 +84,12 @@ def setup(userinputs,pydir):
     if os.path.exists(target_dir + '/init') == True:
         os.system('rm -r '+target_dir+'/init')
 
+    print 'Copying files'
     #copy init directory to target directory
     source =  pydir+'/init'
     destination = target_dir+'/init'
     shutil.copytree(source, destination)
+
 
 
     # Only move images to /img directory if they aren't there already
@@ -78,22 +97,34 @@ def setup(userinputs,pydir):
 
     if len(im_check) == 0:
         #Move all the fits files
-        print 'Moving fits files ...'
+        print '\t Copying fits files ...'
 
         imlist = glob.glob(userinputs['DATA'] + '/*.fits')
 
+        #print progressbar
+        i=0
+        printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
+
         for impath in imlist:
+            #set path parameters
             source = impath
             image = impath.split('/')[-1]
             destination = target_dir + '/img/' + image
-            os.rename(source, destination)
+
+            #copy the file
+            shutil.copy(source, destination)
+
+            #Update the progressbar
+            i = i+1
+            printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
 
             # Update header of each image slightly
             pf = pyfits.open(destination, mode='update')
             pf[0].header['BUNIT']= 'ELECTRONS/S'
             pf.close()
+        print('')
 
-
+    #Copy the Source Extraction parameter files.
     source =  pydir + '/init/output.param'
     destination = target_dir+ '/s_extraction/output.param'
     shutil.copyfile(source, destination)

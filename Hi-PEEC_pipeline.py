@@ -22,7 +22,6 @@ from __future__ import division#,print_function
 #import math, datahandling and plotting utils
 import numpy as np
 import math
-import pandas as pd
 import matplotlib.pyplot as plt
 
 #sys utils
@@ -41,6 +40,7 @@ import pywcs
 #Import Hi-PEEC modules
 sys.path.insert(0, './source/')
 import filemanagement
+import extraction
 #------------------------------------------------------------------------------
 
 
@@ -55,7 +55,6 @@ print ''
 
 # Location of python code
 pydir = os.getcwd()
-
 
 
 # Open necessary packages in iraf
@@ -86,14 +85,25 @@ for key in userinput:
     except:
         userinput[key] = str(userinput[key])
 
+#Set up directories
+if userinput['OUTDIR']==False:
+    target_dir = os.getcwd()
+    userinput['OUTDIR'] = target_dir
+else:
+    target_dir = userinput['OUTDIR']
+
+
 # Print contents of input file
-print 'Submitted inputs:'
+print 'Inputs that will be used by the pipeline:'
 print '_______________________________________________________________________'
 print ''
 for key in userinput:
     print '{}:  {}'.format(key, userinput[key])
 print ''
 print '_______________________________________________________________________'
+
+
+
 
 
 #==============================================================================
@@ -103,4 +113,5 @@ print '_______________________________________________________________________'
 #Setting up folder structure at desired location
 filemanagement.setup(userinput, pydir)
 
-
+#Running initial extraction
+extraction.extraction(userinput)
