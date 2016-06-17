@@ -5,9 +5,10 @@
 #Title: Setup
 #Author:        Axel Runnholm
 #Creation date: 2016-06-17
-#Description:   This script sets up the required directories for the Hi-PEEC
-#               Pipeline and makes sure the correct files are copied to the
-#               correct directories.
+#Description:   This script contains the functionality for setting up the
+#               required directories and files needed for running as well as
+#               the function responsible for cleaning the directory at the end
+#               of the run.
 #------------------------------------------------------------------------------
 
 
@@ -18,9 +19,6 @@ from __future__ import division
 
 #import math, datahandling and plotting utils
 import numpy as np
-import math
-import pandas as pd
-import matplotlib.pyplot as plt
 
 #sys utils
 import os,glob
@@ -31,9 +29,8 @@ import string
 import ast
 
 #astronomy utils
-import pyfits, pdb
-from pyraf import iraf
-import pywcs
+import pyfits
+
 #------------------------------------------------------------------------------
 
 
