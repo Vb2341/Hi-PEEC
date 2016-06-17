@@ -68,7 +68,7 @@ iraf.daophot(_doprint=0)
 infile = 'Hi-PEEC_settings.input'
 
 # Verify that input file exists
-if os.path.exists(target_dir + '/' + infile) == False:
+if os.path.exists(pydir + '/' + infile) == False:
     print ''
     print 'File ', infile, ' could not be found in ', target_dir
     sys.exit('quitting now...')

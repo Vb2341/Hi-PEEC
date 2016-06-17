@@ -3,14 +3,14 @@
 
 #------------------------------------------------------------------------------
 #Title: Setup
-#Author: 		Axel Runnholm
+#Author:        Axel Runnholm
 #Creation date: 2016-06-17
-#Description: 	This script sets up the required directories for the Hi-PEEC
-#				Pipeline and makes sure the correct files are copied to the
-#				correct directories.
+#Description:   This script sets up the required directories for the Hi-PEEC
+#               Pipeline and makes sure the correct files are copied to the
+#               correct directories.
 #------------------------------------------------------------------------------
 
-'''
+
 #import packages
 #------------------------------------------------------------------------------
 # compensation for main diffs between Python 2.7 and 3
@@ -35,19 +35,19 @@ import pyfits, pdb
 from pyraf import iraf
 import pywcs
 #------------------------------------------------------------------------------
-'''
-
-def setup(userinputs,homedir):
-	#setup directory paths
-	if userinputs['OUTDIR']==False:
-		target_dir = os.getcwd()
-	else:
-		target_dir = userinputs['OUTDIR']
 
 
+def setup(userinputs,pydir):
+    #setup directory paths
+    if userinputs['OUTDIR']==False:
+        target_dir = os.getcwd()
+    else:
+        target_dir = userinputs['OUTDIR']
 
-	print 'Creating directories ...'
 
+
+    print 'Creating directories ...'
+    #Create required directories
     if os.path.exists(target_dir + '/s_extraction') == False:
         os.makedirs(target_dir + '/s_extraction')
 
@@ -60,14 +60,27 @@ def setup(userinputs,homedir):
     if os.path.exists(target_dir + '/img') == False:
         os.makedirs(target_dir + '/img')
 
-    if os.path.exists(target_dir + '/init') == False:
+
+    #check that the init directory exists
+    if os.path.exists(pydir + '/init') == False:
         print 'No init/ directory. Please create.'
         sys.exit()
+
+    #Remove it if it exists to make sure that the config files are properly updated
+    if os.path.exists(target_dir + '/init') == True:
+        os.system('rm -r '+target_dir+'/init')
+
+    #copy init directory to target directory
+    source =  pydir+'/init'
+    destination = target_dir+'/init'
+    shutil.copytree(source, destination)
+
 
     # Only move images to /img directory if they aren't there already
     im_check = glob.glob(target_dir + '/img/*.fits')
 
     if len(im_check) == 0:
+        #Move all the fits files
         print 'Moving fits files ...'
 
         imlist = glob.glob(userinputs['DATA'] + '/*.fits')
@@ -84,16 +97,18 @@ def setup(userinputs,homedir):
             pf.close()
 
 
-    source =  homedir + '/init/output.param'
-    destination = homedir + '/s_extraction/output.param'
+    source =  pydir + '/init/output.param'
+    destination = target_dir+ '/s_extraction/output.param'
     shutil.copyfile(source, destination)
 
-    source =  homedir + '/init/R2_wl_aa.config'
+    source =  pydir + '/init/R2_wl_aa.config'
     destination = target_dir + '/s_extraction/R2_wl_aa.config'
     shutil.copyfile(source, destination)
 
-    source =  homedir + '/init/default.nnw'
+    source =  pydir + '/init/default.nnw'
     destination = target_dir + '/s_extraction/default.nnw'
     shutil.copyfile(source, destination)
 
 
+def cleanup():
+    pass
