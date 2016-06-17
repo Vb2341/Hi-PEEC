@@ -37,6 +37,10 @@ import ast
 import pyfits, pdb
 from pyraf import iraf
 import pywcs
+
+#Import Hi-PEEC modules
+sys.path.insert(0, './source/')
+import setup
 #------------------------------------------------------------------------------
 
 
@@ -48,6 +52,7 @@ print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
 print 'Version 0.1'
 print 'Last changed: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
+
 # Location of target directory (should be current directory)
 target_dir = os.getcwd()
 
@@ -82,12 +87,17 @@ for key in userinput:
 	except:
 		userinput[key] = str(userinput[key])
 
-
 # Print contents of input file
 print 'Submitted inputs:'
-print '________________________________________________________________________________________'
+print '_______________________________________________________________________'
 print ''
 for key in userinput:
 	print '{}:  {}'.format(key,userinput[key])
 print ''
-print '________________________________________________________________________________________'
+print '_______________________________________________________________________'
+
+
+#==============================================================================
+#RUNNING THE PIPELINE
+#==============================================================================
+
