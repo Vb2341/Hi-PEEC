@@ -112,6 +112,7 @@ def extraction(userinputs):
     print 'the quality of source extraction.'
     print ''
 
+    return target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
 def photometry(userinputs, image, catalog, outputname, apertures):
     """Function for performing IRAF photometry
@@ -125,22 +126,30 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     #set directory
     target_dir = userinputs['OUTDIR']
 
-    #Update passed names  to be full paths
-    image = glob.glob(target_dir + '/img/' + image)
-    if len(image)==0:
-        sys.exit('Selected image does not exist')
-    else:
-        image = image[0]
+    #Update passed names  to be full paths if they are not
 
-    catalog = target_dir + '/init/' + catalog
-    output = target_dir + '/photometry/' + outputname
+    if len(image.split('/'))==1:
+        image = glob.glob(target_dir + '/img/' + image)
+        if len(image)==0:
+            sys.exit('Selected image does not exist')
+        else:
+            image = image[0]
+
+    if len(catalog.split('/'))==1:
+        catalog = target_dir + '/init/' + catalog
+
+    if len(outputname.split('/'))==1:
+        output = target_dir + '/photometry/' + outputname
+    else:
+        output = outputname
+        outputname = outputname.split('/')[-1]
 
 
     #Load zeropoints
     inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
 
-    #get filtername from imagename
-    filter = image.split('/')[-1].split('_')[0]
+    # Get filter from header
+    filter = pyfits.getheader(image)['FILTER']
 
 
     # Set the necessary variables for photometry on the reference image
@@ -152,7 +161,11 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     zp = zp_zp[match]
 
     # zp is a string within an array, so need to turn into a float
-    zp = float(zp[0])
+    try:
+        zp = float(zp[0])
+        #If that cannot be done there was no match.
+    except IndexError:
+        sys.exit('No zeropoint was found for filter: {}'.format(filter))
 
     # Remove output file if it already exists
     if os.path.exists(output) == True:

@@ -109,10 +109,13 @@ if userinput['SETUP']:
 
 #Running initial extraction
 if userinput['EXTRACT']:
-    extraction.extraction(userinput)
+    print ''
+    print 'Extracting sources from reference image:'
+    print ''
+    extraction_cat = extraction.extraction(userinput)
 
-#Do the photometry
-if userinput['DO_PHOT']:
+#Create growth curve:
+if userinput['DO_GROWTH']:
 
     # Running initial photometry on the isolated stars & creating a growth curve
     print ''
@@ -121,18 +124,32 @@ if userinput['DO_PHOT']:
     growth_curve_apertures=','.join('{}'.format(float(i)) for i in range(1,21))
 
     #Do photometry for the growthcurve
-    output_catalog = extraction.photometry(userinput, userinput['IMAGE'],
+    growth_catalog = extraction.photometry(userinput, userinput['IMAGE'],
                                 userinput['STARS'], 'isolated_stars.mag',
                                 growth_curve_apertures )
     #Create the growthcurve
     print ''
     print 'Creating growth curve'
-    extraction.growth_curve(userinput, output_catalog)
+    extraction.growth_curve(userinput, growth_catalog)
 
-    # test single aperture
+#Do science photometry:
+if userinput['DO_PHOT']:
+
+    #Do an initial centering photometry run
     print ''
-    print 'Running test photometry'
-    output = extraction.photometry(userinput, userinput['IMAGE'],
-                                   userinput['STARS'], 'test.mag',
-                                   '3.0')
+    print 'Centering coordinates'
+    center_catalog = extraction.photometry(userinput, userinput['IMAGE'],
+                                   extraction_cat, 'centercoords.mag',
+                                   str(userinput['AP_RAD']))
+    fullcat = target_dir + '/photometry/fullcat_ref_center.coo'
+    filemanagement.remove_if_exists(fullcat)
+    iraf.txdump(center_catalog,'XCENTER,YCENTER','yes',Stdout=fullcat)
+
+    #Use this as input and do all image photometry
+    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+    for image in imagelist:
+        filter = pyfits.getheader(image)['FILTER']
+        outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
+        extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
+
 

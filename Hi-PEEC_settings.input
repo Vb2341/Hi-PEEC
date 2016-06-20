@@ -9,7 +9,7 @@ DISTANCE    67.8                                # 2 distance to target in units 
 #---------------------------------------------------------------------------------------
 
 
-#Running folder setup
+#Folder setup
 #---------------------------------------------------------------------------------------
 SETUP       True                                # 3 set up directories etc? (True/False)
 DATA        /home/user/Hi-PEEC/Data/NGC1614     # 4 Directory where image files are located
@@ -30,27 +30,28 @@ REF_FILTER  F555W				# 8 Filter to be used as reference
 #Photometry parameters 
 #---------------------------------------------------------------------------------------
 DO_PHOT     True                                # 8 Whether to do photometry(True/False)
-AP_RAD      4.0                                 # 9  aperture radius (<7 pixels)
-ANNULUS     7                                   # Skyannulus size (pixels)
-D_ANNULUS   1                                   # Skyannulus width (pixels)
+DO_GROWTH   True				# 9 Whether to create a growth curve (True/False)
+AP_RAD      4.0                                 # 10  aperture radius (<7 pixels)
+ANNULUS     7                                   # 11 Skyannulus size (pixels)
+D_ANNULUS   1                                   # 12 Skyannulus width (pixels)
 #---------------------------------------------------------------------------------------
 
 
 #Aperture correction parameters:
 #---------------------------------------------------------------------------------------
-APCORR      True                                # 10 Run aperture correction step
-STARS	    foregroundstars.coo                 # 11 File containing isolated star coords (xy) 
+APCORR      True                                # 13 Run aperture correction step
+STARS	    foregroundstars.coo                 # 14 File containing isolated star coords (xy) 
 						# needs to be located in the /init/ directory
 #---------------------------------------------------------------------------------------
 
 #Catalog cleanup parameters
 #---------------------------------------------------------------------------------------
-MAGERR      1                                   # 12 Level for photometry error cut
+MAGERR      1                                   # 15 Level for photometry error cut
 #---------------------------------------------------------------------------------------
 
 #Cleanup
 #---------------------------------------------------------------------------------------
-CLEAN      True                                 # 13 Run the directory cleaning step(True/False)
+CLEAN      True                                 # 16 Run the directory cleaning step(True/False)
 #---------------------------------------------------------------------------------------
 
 

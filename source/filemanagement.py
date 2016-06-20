@@ -53,12 +53,12 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 2, bar
         print("\n")
 
 def remove_if_exists(filename):
-    if os.path.exists(filename') == True:
+    if os.path.exists(filename) == True:
         try:
             os.remove(filename)
             return 1
         except OSError:
-            os.removedirs(filename)
+            shutil.rmtree(filename)
             return 1
     else:
         return 0
@@ -91,8 +91,7 @@ def setup(userinputs,pydir):
         sys.exit()
 
     #Remove it if it exists to make sure that the config files are properly updated
-    if os.path.exists(target_dir + '/init') == True:
-        os.system('rm -r '+target_dir+'/init')
+    remove_if_exists(target_dir+'/init')
 
     print 'Copying files'
     #copy init directory to target directory
