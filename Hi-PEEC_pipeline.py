@@ -122,5 +122,5 @@ if userinput['DO_PHOT']:
                                 userinput['STARS'], 'isolated_stars.mag',
                                 growth_curve_apertures )
     #Create the growthcurve
-    extraction.growth_curve(userinput, output_catalog)
+    #extraction.growth_curve(userinput, output_catalog)
 

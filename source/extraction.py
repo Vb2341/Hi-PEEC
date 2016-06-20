@@ -167,29 +167,90 @@ def photometry(userinputs, image, catalog, outputname, apertures):
 
     iraf.phot(image, catalog, output)
 
-    # Move phot results to new files, remove INDEFs
+
+
+    #Depending on the number of apertures used, different methods of saving the
+    # results are required
     #--------------------------------------------------------------------------
+
+    naper = len(apertures.split(','))
+
+    #final output filename
     fullcat_mag_short = target_dir + '/photometry/short_' + outputname
 
-    # Removes all outputlines that do not contain the character '*'
-    # ensures only phot results are kept
-    cmd = 'grep "*" ' + output + ' > ' + fullcat_mag_short
-    os.system(cmd)
+    if naper > 1:
+        # Removes all outputlines that do not contain the character '*'
+        # ensures only phot results are kept
+        cmd = 'grep "*" ' + output + ' > ' + fullcat_mag_short
+        os.system(cmd)
 
-    # Replace INDEFS:
-    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
-    os.system(cmd)
+        # Replace INDEFS:
+        cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
+        os.system(cmd)
 
-    # Remove .bak files to prevent confusion
-    bak_fullcat = fullcat_mag_short + '.bak'
-    os.remove(bak_fullcat)
+        dumpfile = target_dir+'/photometry/dumptest.mag'
+
+        # Remove .bak files to prevent confusion
+        bak_fullcat = fullcat_mag_short + '.bak'
+        os.remove(bak_fullcat)
+
+
+    else:
+        #Dump results into a temp file
+        temp = target_dir + '/photometry/phot_dump.mag'
+        iraf.txdump(output, 'XCENTER,YCENTER,FLUX,MAG,MERR,MSKY,ID', 'yes', Stdout = temp)
+
+        # Set placeholders for sources outside of FOV and undetected sources
+        # For outside of FOV, use 66.666 instead of INDEF
+        # For undetected sources, use 99.999 instead of INDEF
+
+        # Sources outside of FOV have exactly zero flux
+        x, y, flux, mag, merr, msky, id = np.loadtxt(fullcat_mag_short, unpack = True,
+                                                        dtype = str)
+
+        flux = flux.astype(float)
+
+        out_fov = (flux == 0.)
+
+        mag[out_fov] = 66.666
+        merr[out_fov] = 66.666
+
+        # Undetected sources, those with negative flux or fluxes so small that mag err
+        # is INDEF
+        neg_flux = (flux < 0.)
+        tiny_flux = (flux > 0.) & (merr == 'INDEF')
+
+        mag[neg_flux] = 99.999
+        merr[neg_flux] = 99.999
+
+        merr[tiny_flux] = 99.999
+
+        # Save results to new file
+        x = x.astype(float)
+        y = y.astype(float)
+        mag = mag.astype(float)
+        merr = merr.astype(float)
+        msky = msky.astype(float)
+        id = id.astype(int)
+
+        zip_phot = zip(x, y, mag, merr, msky, id)
+
+        np.savetxt(fullcat_mag_short, zip_phot,
+                    fmt = '%.3f  %.3f  %.3f  %.3f  %.9f  %i')
+
     #--------------------------------------------------------------------------
 
     return fullcat_mag_short
 
 
 def growth_curve(userinputs, catalog):
+
+    #Load the photometry results from the catalog (that is returned by the phot
+    #function)
     aper_st, flux_st = np.loadtxt(catalog, unpack=True, usecols=(0,3))
+
+    #Growth curve is only done on the ref image so we get the filter from userinp.
+    filter = userinputs['REF_FILTER']
 
     ratio_st = np.empty(len(aper_st))
 
