@@ -149,7 +149,11 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
 
     # Get filter from header
-    filter = pyfits.getheader(image)['FILTER']
+    try:
+        filter = pyfits.getheader(image)['FILTER']
+    except KeyError:
+        #The 814 image has the filter information under the keyword FILTER2:
+        filter = pyfits.getheader(image)['FILTER2']
 
 
     # Set the necessary variables for photometry on the reference image
@@ -168,8 +172,7 @@ def photometry(userinputs, image, catalog, outputname, apertures):
         sys.exit('No zeropoint was found for filter: {}'.format(filter))
 
     # Remove output file if it already exists
-    if os.path.exists(output) == True:
-        os.remove(output)
+    filemanagement.remove_if_exists(output)
 
     # Run photometry
     iraf.datapars.epadu = exptime

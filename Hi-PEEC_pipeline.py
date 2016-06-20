@@ -138,18 +138,40 @@ if userinput['DO_PHOT']:
     #Do an initial centering photometry run
     print ''
     print 'Centering coordinates'
-    center_catalog = extraction.photometry(userinput, userinput['IMAGE'],
+    extraction.photometry(userinput, userinput['IMAGE'],
                                    extraction_cat, 'centercoords.mag',
                                    str(userinput['AP_RAD']))
+
+    center_catalog = target_dir + '/photometry/centercoords.mag'
+
     fullcat = target_dir + '/photometry/fullcat_ref_center.coo'
     filemanagement.remove_if_exists(fullcat)
+
     iraf.txdump(center_catalog,'XCENTER,YCENTER','yes',Stdout=fullcat)
 
     #Use this as input and do all image photometry
+
+
+    print ''
+    print 'Doing photometry on full image set'
+
     imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+
+    #print progressbar
+    i=0
+    l = len(imagelist)
+    filemanagement.printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
+
     for image in imagelist:
-        filter = pyfits.getheader(image)['FILTER']
+        try:
+            filter = pyfits.getheader(image)['FILTER']
+        except KeyError:
+            #The 814 image has the filter information under the keyword FILTER2:
+            filter = pyfits.getheader(image)['FILTER2']
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
         extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
+        i=i+1
+        filemanagement.printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
+
 
 
