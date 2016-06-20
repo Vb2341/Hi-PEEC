@@ -129,7 +129,7 @@ def photometry(userinputs, image, catalog, outputname, apertures):
         image = image[0]
 
     catalog = target_dir + '/init/' + catalog
-    outputname = target_dir + '/photometry/' + outputname
+    output = target_dir + '/photometry/' + outputname
 
 
     #Load zeropoints
@@ -151,8 +151,8 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     zp = float(zp[0])
 
     # Remove output file if it already exists
-    if os.path.exists(outputname) == True:
-        os.remove(outputname)
+    if os.path.exists(output) == True:
+        os.remove(output)
 
     # Run photometry
     iraf.datapars.epadu = exptime
@@ -165,19 +165,80 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     iraf.photpars.apertures = apertures
     iraf.photpars.zmag = zp
 
-    iraf.phot(image, catalog, outputname)
+    iraf.phot(image, catalog, output)
 
     # Move phot results to new files, remove INDEFs
-    #fullcat_mag_short = target_dir + '/photometry/ci_fullcat_short.mag'
+    #--------------------------------------------------------------------------
+    fullcat_mag_short = target_dir + '/photometry/short_' + outputname
 
-    #cmd = 'grep "*" ' + outputname + ' > ' + fullcat_mag_short
-    #os.system(cmd)
+    # Removes all outputlines that do not contain the character '*'
+    # ensures only phot results are kept
+    cmd = 'grep "*" ' + output + ' > ' + fullcat_mag_short
+    os.system(cmd)
 
-    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + outputname # + fullcat_mag_short
+    # Replace INDEFS:
+    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
     os.system(cmd)
 
     # Remove .bak files to prevent confusion
-    bak_fullcat = outputname + '.bak'
+    bak_fullcat = fullcat_mag_short + '.bak'
     os.remove(bak_fullcat)
+    #--------------------------------------------------------------------------
 
-#def growth_curve(userinputs, )
+    return fullcat_mag_short
+
+
+def growth_curve(userinputs, catalog):
+    aper_st, flux_st = np.loadtxt(catalog, unpack=True, usecols=(0,3))
+
+    ratio_st = np.empty(len(aper_st))
+
+    #number of apertures
+    naper = 20
+
+    # Calculate the number of stars, make sure it is an integer
+    nstar = int(len(aper_st)/naper)
+    aper_ind = naper - 1
+
+    for k in range(nstar):
+
+        for i in range(naper):
+
+            ratio_st[i + k*naper] = flux_st[i + k*naper]/flux_st[aper_ind + k*naper]
+
+
+
+    # Find median ratio at each aperture between all the stars and all the clusters
+    med_st = np.empty(naper)
+
+    for i in range(naper):
+
+        med_st[i] = np.median(ratio_st[i::naper])
+
+
+    # Plot growth curves
+    fig = plt.figure(figsize = (7,7))
+
+    aper_x = np.arange(naper) + 1
+
+    for i in range(nstar):
+
+        ratio_y = ratio_st[i*naper:(i + 1)*naper]
+        plt.plot(aper_x, ratio_y, 'y-')
+        plt.annotate(str(i + 1), xy=(8.0, ratio_y[7]),
+            horizontalalignment='left', verticalalignment='top', fontsize=6)
+
+
+    plt.plot(aper_x, med_st, 'r-' , linewidth=4.0)
+    plt.hlines(0.5, 0, 20, color='black', linewidth=2, zorder=10)
+    plt.vlines(4, 0, 1.1, color='black', linewidth=2, linestyle='dashed', zorder=10)
+    plt.vlines(5, 0, 1.1, color='black', linewidth=2, linestyle='dashed', zorder=10)
+    plt.vlines(6, 0, 1.1, color='black', linewidth=2, linestyle='dashed', zorder=10)
+
+    plt.ylabel('Normalized Flux ' + ref_filter.upper())
+    plt.xlabel('Radius (pix)')
+    plt.xlim(1,20)
+    plt.minorticks_on()
+
+    fig.savefig(userinputs['OUTDIR'] + '/plots/plot_growth_curve.pdf')
+

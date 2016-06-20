@@ -118,7 +118,9 @@ if userinput['DO_PHOT']:
     growth_curve_apertures=','.join('{}'.format(float(i)) for i in range(1,21))
 
     #Do photometry for the growthcurve
-    extraction.photometry(userinput, userinput['IMAGE'],
-                          userinput['STARS'], 'isolated_stars.mag',
-                          growth_curve_apertures )
+    output_catalog = extraction.photometry(userinput, userinput['IMAGE'],
+                                userinput['STARS'], 'isolated_stars.mag',
+                                growth_curve_apertures )
+    #Create the growthcurve
+    extraction.growth_curve(userinput, output_catalog)
 
