@@ -52,6 +52,16 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 2, bar
     if iteration == total:
         print("\n")
 
+def remove_if_exists(filename):
+    if os.path.exists(filename') == True:
+        try:
+            os.remove(filename)
+            return 1
+        except OSError:
+            os.removedirs(filename)
+            return 1
+    else:
+        return 0
 
 def setup(userinputs,pydir):
 
@@ -149,3 +159,4 @@ def setup(userinputs,pydir):
 
 def cleanup():
     pass
+

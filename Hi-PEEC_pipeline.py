@@ -111,9 +111,12 @@ if userinput['SETUP']:
 if userinput['EXTRACT']:
     extraction.extraction(userinput)
 
-# Running initial photometry on the isolated stars
-# Creating growth curve
+#Do the photometry
 if userinput['DO_PHOT']:
+
+    # Running initial photometry on the isolated stars & creating a growth curve
+    print ''
+    print 'Running initial photometry on the isolated stars'
     #create a string '1.0,2.0' etc up to 20
     growth_curve_apertures=','.join('{}'.format(float(i)) for i in range(1,21))
 
@@ -122,5 +125,14 @@ if userinput['DO_PHOT']:
                                 userinput['STARS'], 'isolated_stars.mag',
                                 growth_curve_apertures )
     #Create the growthcurve
-    #extraction.growth_curve(userinput, output_catalog)
+    print ''
+    print 'Creating growth curve'
+    extraction.growth_curve(userinput, output_catalog)
+
+    # test single aperture
+    print ''
+    print 'Running test photometry'
+    output = extraction.photometry(userinput, userinput['IMAGE'],
+                                   userinput['STARS'], 'test.mag',
+                                   '3.0')
 

@@ -32,6 +32,10 @@ import ast
 import pyfits
 from pyraf import iraf
 import pywcs
+
+#Import Hi-PEEC modules
+sys.path.insert(0, './source/')
+import filemanagement
 #------------------------------------------------------------------------------
 
 iraf.noao(_doprint=0)
@@ -198,6 +202,7 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     else:
         #Dump results into a temp file
         temp = target_dir + '/photometry/phot_dump.mag'
+        filemanagement.remove_if_exists(temp)
         iraf.txdump(output, 'XCENTER,YCENTER,FLUX,MAG,MERR,MSKY,ID', 'yes', Stdout = temp)
 
         # Set placeholders for sources outside of FOV and undetected sources
@@ -205,8 +210,8 @@ def photometry(userinputs, image, catalog, outputname, apertures):
         # For undetected sources, use 99.999 instead of INDEF
 
         # Sources outside of FOV have exactly zero flux
-        x, y, flux, mag, merr, msky, id = np.loadtxt(fullcat_mag_short, unpack = True,
-                                                        dtype = str)
+        x, y, flux, mag, merr, msky, id = np.loadtxt(temp, unpack = True,
+                                                     dtype = str)
 
         flux = flux.astype(float)
 
@@ -250,7 +255,7 @@ def growth_curve(userinputs, catalog):
     aper_st, flux_st = np.loadtxt(catalog, unpack=True, usecols=(0,3))
 
     #Growth curve is only done on the ref image so we get the filter from userinp.
-    filter = userinputs['REF_FILTER']
+    ref_filter = userinputs['REF_FILTER']
 
     ratio_st = np.empty(len(aper_st))
 
