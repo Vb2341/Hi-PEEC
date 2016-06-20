@@ -66,7 +66,7 @@ iraf.unlearn('photpars')
 
 iraf.unlearn('phot')
 iraf.phot.interactive = 'no'
-iraf.phot.verbose = 'yes'
+iraf.phot.verbose = 'no'
 iraf.phot.verify = 'no'
 #------------------------------------------------------------------------------
 
@@ -168,15 +168,16 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     iraf.phot(image, catalog, outputname)
 
     # Move phot results to new files, remove INDEFs
-    fullcat_mag_short = target_dir + '/photometry/ci_fullcat_short.mag'
+    #fullcat_mag_short = target_dir + '/photometry/ci_fullcat_short.mag'
 
-    cmd = 'grep "*" ' + outputname + ' > ' + fullcat_mag_short
-    os.system(cmd)
+    #cmd = 'grep "*" ' + outputname + ' > ' + fullcat_mag_short
+    #os.system(cmd)
 
-    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
+    cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + outputname # + fullcat_mag_short
     os.system(cmd)
 
     # Remove .bak files to prevent confusion
-    bak_fullcat = fullcat_mag_short + '.bak'
+    bak_fullcat = outputname + '.bak'
     os.remove(bak_fullcat)
 
+#def growth_curve(userinputs, )
