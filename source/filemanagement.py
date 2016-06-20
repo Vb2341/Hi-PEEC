@@ -33,7 +33,7 @@ import pyfits
 
 #------------------------------------------------------------------------------
 
-def printProgress (iteration, total, prefix = '', suffix = '', decimals = 2, barLength = 100):
+def printProgress (iteration, total, prefix = '\t Progress', suffix = 'Complete', decimals = 2, barLength = 50):
     """
     Call in a loop to create terminal progress bar
     @params:

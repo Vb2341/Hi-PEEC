@@ -6,7 +6,7 @@
 #Author:        Axel Runnholm
 #Creation date: 2016-06-16
 #Description:   This script contains the routines for estimating and applying
-#				aperture corrections.
+#               aperture corrections.
 
 #------------------------------------------------------------------------------
 
@@ -38,3 +38,39 @@ import pywcs
 sys.path.insert(0, './source/')
 import filemanagement
 #------------------------------------------------------------------------------
+
+def calculation(userinputs):
+    #------------------------------------------------------------------------------
+    # Setup stuff
+    #------------------------------------------------------------------------------
+
+    small_ap = 4
+    big_ap = 20
+
+    #Set directory of the photometry as variable since it is target for the function
+    phot_dir = userinputs['OUTDIR'] + 'photometry/
+
+    #Get the list of images
+    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+
+    #Clear old apcorr file
+    apcorrfile = target_dir + '/photometry/avg_aperture_correction.txt'
+    filemanagement.remove_if_exists(apcorrfile)
+
+    #------------------------------------------------------------------------------
+    # Do required photometry
+    #------------------------------------------------------------------------------
+
+
+    for image in imagelist:
+        try:
+            filter = pyfits.getheader(image)['FILTER']
+        except KeyError:
+            #The 814 image has the filter information under the keyword FILTER2:
+            filter = pyfits.getheader(image)['FILTER2']
+
+        out_photometry_file = phot_dir + 'apcorr_' + filter + '.mag'
+
+
+
+

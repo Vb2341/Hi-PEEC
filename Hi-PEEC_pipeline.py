@@ -41,6 +41,7 @@ import pywcs
 sys.path.insert(0, './source/')
 import filemanagement
 import extraction
+import apcorr
 #------------------------------------------------------------------------------
 
 
@@ -103,18 +104,26 @@ print '_______________________________________________________________________'
 #RUNNING THE PIPELINE
 #==============================================================================
 
+#------------------------------------------------------------------------------
 #Setting up folder structure at desired location
+#------------------------------------------------------------------------------
 if userinput['SETUP']:
     filemanagement.setup(userinput, pydir)
 
+
+#------------------------------------------------------------------------------
 #Running initial extraction
+#------------------------------------------------------------------------------
 if userinput['EXTRACT']:
     print ''
     print 'Extracting sources from reference image:'
     print ''
     extraction_cat = extraction.extraction(userinput)
 
+
+#------------------------------------------------------------------------------
 #Create growth curve:
+#------------------------------------------------------------------------------
 if userinput['DO_GROWTH']:
 
     # Running initial photometry on the isolated stars & creating a growth curve
@@ -132,7 +141,10 @@ if userinput['DO_GROWTH']:
     print 'Creating growth curve'
     extraction.growth_curve(userinput, growth_catalog)
 
+
+#------------------------------------------------------------------------------
 #Do science photometry:
+#------------------------------------------------------------------------------
 if userinput['DO_PHOT']:
 
     #Do an initial centering photometry run
@@ -160,7 +172,7 @@ if userinput['DO_PHOT']:
     #print progressbar
     i=0
     l = len(imagelist)
-    filemanagement.printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
+    filemanagement.printProgress(i, l)
 
     for image in imagelist:
         try:
@@ -168,10 +180,15 @@ if userinput['DO_PHOT']:
         except KeyError:
             #The 814 image has the filter information under the keyword FILTER2:
             filter = pyfits.getheader(image)['FILTER2']
+
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
         extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
         i=i+1
-        filemanagement.printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
+        filemanagement.printProgress(i, l)
 
+#------------------------------------------------------------------------------
+# Calculate aperture corrections
+#------------------------------------------------------------------------------
 
-
+if userinput['APCORR']:
+    apcorr.apcorr(userinput)
