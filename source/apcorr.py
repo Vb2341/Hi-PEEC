@@ -70,9 +70,20 @@ def calculation(userinputs):
             #The 814 image has the filter information under the keyword FILTER2:
             filter = pyfits.getheader(image)['FILTER2']
 
-        out_photometry_file = phot_dir + '20px_apcorr_' + filter + '.mag'
+        # 20 px aperture photometry
+        photometry_file_20 = phot_dir + '20px_apcorr_' + filter + '.mag'
 
-        extraction_catalog = extraction.photometry(userinputs, image, userinputs['STARS'], out_photometry_file, '20.0')
+        extraction_cat_20 = extraction.photometry(userinputs, image,
+                            userinputs['STARS'], photometry_file_20,
+                            '20.0', annulus=21.0, dannulus=1.0)
+
+        # 4px aperture photometry 
+        photometry_file_4 = phot_dir + '4px_apcorr_' + filter + '.mag'
+
+        extraction_cat_4 = extraction.photometry(userinputs, image,
+                            userinputs['STARS'], photometry_file_20,
+                            '4.0')
+        
 
 
 
