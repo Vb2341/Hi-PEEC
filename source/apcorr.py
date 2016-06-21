@@ -53,7 +53,7 @@ def calculation(userinputs):
     big_ap = 20
 
     #Set directory of the photometry as variable since it is target for the function
-    phot_dir = userinputs['OUTDIR'] + 'photometry/
+    phot_dir = userinputs['OUTDIR'] + 'photometry/'
 
     #Get the list of images
     imagelist = glob.glob(target_dir+'/img/*sci*.fits')
