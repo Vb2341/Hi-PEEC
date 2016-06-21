@@ -106,3 +106,13 @@ def calculation(userinputs):
         apcor_avg = np.mean(apcor[lim])
         apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
 
+        #Save these results to file
+        with open(apcorrfile,'a') as file:
+            avg = str(apcor_avg)
+            err = str(apcor_err)
+            lim = str(len(apcor_lim))
+            file.write(filter + '\t' + avg + '\t' + err + '\t' + lim + '\n')
+        print ''
+        print '\t Filter: ' + filter
+        print '\t Apcor: %.3f' % apcor_avg
+        print '\t Apcor error: %.3f' % apcor_err

@@ -191,4 +191,7 @@ if userinput['DO_PHOT']:
 #------------------------------------------------------------------------------
 
 if userinput['APCORR']:
+    print ''
+    print 'Calculating aperture corrections'
+
     apcorr.apcorr(userinput)
