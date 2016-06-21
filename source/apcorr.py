@@ -103,8 +103,12 @@ def calculation(userinputs):
         # Limit range of aperture corrections allowed to go into average
         lim = (apcor < uplim) & (apcor > lowlim)
         apcor_lim = apcor[lim]
-        apcor_avg = np.mean(apcor[lim])
-        apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
+        try:
+            apcor_avg = np.mean(apcor[lim])
+            apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
+        except RuntimeWarning:
+            sys.exit('No stars left after filtering. Check {} and the aperture \
+                correction requirements'.format(userinputs['STARS']))
 
         #Save these results to file
         with open(apcorrfile,'a') as file:
@@ -116,3 +120,6 @@ def calculation(userinputs):
         print '\t Filter: ' + filter
         print '\t Apcor: %.3f' % apcor_avg
         print '\t Apcor error: %.3f' % apcor_err
+
+def apply(userinputs, catalog):
+    pass
