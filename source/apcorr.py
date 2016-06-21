@@ -53,13 +53,13 @@ def calculation(userinputs):
     big_ap = 20
 
     #Set directory of the photometry as variable since it is target for the function
-    phot_dir = userinputs['OUTDIR'] + 'photometry/'
+    phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
     #Get the list of images
-    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+    imagelist = glob.glob(userinputs['OUTDIR'] +'/img/*sci*.fits')
 
     #Clear old apcorr file
-    apcorrfile = target_dir + '/photometry/avg_aperture_correction.txt'
+    apcorrfile = userinputs['OUTDIR'] + '/photometry/avg_aperture_correction.txt'
     filemanagement.remove_if_exists(apcorrfile)
 
 
@@ -85,12 +85,12 @@ def calculation(userinputs):
         photometry_file_4 = phot_dir + '4px_apcorr_' + filter + '.mag'
 
         apcorr_cat_4 = extraction.photometry(userinputs, image,
-                            userinputs['STARS'], photometry_file_20,
+                            userinputs['STARS'], photometry_file_4,
                             '4.0')
 
 
         #-----------------------------------------------------------------------
-        # Calculate individual appcorrs
+        # Calculate apcorrs
         #-----------------------------------------------------------------------
        
         # Load the photometry
