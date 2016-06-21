@@ -38,12 +38,12 @@ import pywcs
 sys.path.insert(0, './source/')
 import filemanagement
 import extraction
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 def calculation(userinputs):
-    #------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # Setup stuff
-    #------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     small_ap = 4
     big_ap = 20
@@ -58,10 +58,6 @@ def calculation(userinputs):
     apcorrfile = target_dir + '/photometry/avg_aperture_correction.txt'
     filemanagement.remove_if_exists(apcorrfile)
 
-    #------------------------------------------------------------------------------
-    # Do required photometry
-    #------------------------------------------------------------------------------
-
 
     for image in imagelist:
         try:
@@ -70,22 +66,30 @@ def calculation(userinputs):
             #The 814 image has the filter information under the keyword FILTER2:
             filter = pyfits.getheader(image)['FILTER2']
 
+        #-----------------------------------------------------------------------
+        # Do required photometry
+        #-----------------------------------------------------------------------
+
         # 20 px aperture photometry
         photometry_file_20 = phot_dir + '20px_apcorr_' + filter + '.mag'
 
-        extraction_cat_20 = extraction.photometry(userinputs, image,
+        apcorr_cat_20 = extraction.photometry(userinputs, image,
                             userinputs['STARS'], photometry_file_20,
                             '20.0', annulus=21.0, dannulus=1.0)
 
         # 4px aperture photometry 
         photometry_file_4 = phot_dir + '4px_apcorr_' + filter + '.mag'
 
-        extraction_cat_4 = extraction.photometry(userinputs, image,
+        apcorr_cat_4 = extraction.photometry(userinputs, image,
                             userinputs['STARS'], photometry_file_20,
                             '4.0')
-        
 
 
+        #-----------------------------------------------------------------------
+        # Calculate individual appcorrs
+        #-----------------------------------------------------------------------
+        x, y, mag_4 = np.loadtxt(apcorr_cat_4, unpack=True, usecols=(0,1,2))
+        mag_20 = np.loadtxt(apcorr_cat_20, unpack=True, usecols=(2,))
 
 
 
