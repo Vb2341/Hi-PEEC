@@ -42,15 +42,15 @@ D_ANNULUS   1                                   # 12 Skyannulus width (pixels)
 APCORR      True                                # 13 Run aperture correction step
 STARS	    foregroundstars.coo                 # 14 File containing isolated star coords (xy) 
 						# needs to be located in the /init/ directory
-#-0.5                                           # 15 upper limit for avg aperture correction 
+UPLIM       -0.5                                # 15 upper limit for avg aperture correction 
                                                 #    (may need to be less negative for more distant galaxies)
-#-1.2                                           # 16 lower limit for avg aperture correction
+LOWLIM      -1.2                                # 16 lower limit for avg aperture correction
                                                 #    (may need to be more negative for very nearby galaxies)
 #---------------------------------------------------------------------------------------
 
 #Catalog cleanup parameters
 #---------------------------------------------------------------------------------------
-MAGERR      1                                   # 17 Level for photometry error cut
+MAGERR      1                                   # 17 Level for photometry error cut (MAG)
 #---------------------------------------------------------------------------------------
 
 #Cleanup

@@ -44,7 +44,11 @@ def calculation(userinputs):
     #---------------------------------------------------------------------------
     # Setup stuff
     #---------------------------------------------------------------------------
+    # Read upper and lower limits for values to include in apcor average
+    lowlim = userinputs['LOWLIM']
+    uplim = userinputs['UPLIM']
 
+    # Set aperture sizes
     small_ap = 4
     big_ap = 20
 
@@ -88,8 +92,17 @@ def calculation(userinputs):
         #-----------------------------------------------------------------------
         # Calculate individual appcorrs
         #-----------------------------------------------------------------------
+       
+        # Load the photometry
         x, y, mag_4 = np.loadtxt(apcorr_cat_4, unpack=True, usecols=(0,1,2))
         mag_20 = np.loadtxt(apcorr_cat_20, unpack=True, usecols=(2,))
 
+        # Calculate aperture corrections
+        apcor = mag_20 - mag_4
 
+        # Limit range of aperture corrections allowed to go into average
+        lim = (apcor < uplim) & (apcor > lowlim)
+        apcor_lim = apcor[lim]
+        apcor_avg = np.mean(apcor[lim])
+        apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
 
