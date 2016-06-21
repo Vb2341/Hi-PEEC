@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 #Title: Hi-PEEC Aperture correction
 #Author:        Axel Runnholm
-#Creation date: 2016-06-16
+#Creation date: 2016-06-20
 #Description:   This script contains the routines for estimating and applying
 #               aperture corrections.
 
@@ -41,6 +41,13 @@ import extraction
 #-------------------------------------------------------------------------------
 
 def calculation(userinputs):
+    """Function for performing IRAF photometry
+    @Params:
+    userinputs  (dict)  - dictionary with results from the user input file.
+
+    @Returns
+    output      (STR)   - full path to the aperture corrections file
+    """
     #---------------------------------------------------------------------------
     # Setup stuff
     #---------------------------------------------------------------------------
@@ -121,5 +128,22 @@ def calculation(userinputs):
         print '\t Apcor: %.3f' % apcor_avg
         print '\t Apcor error: %.3f' % apcor_err
 
-def apply(userinputs, catalog):
-    pass
+        # Make a plot for each filter
+        fig = plt.figure(figsize = (7,7))
+
+        # Draw histogram
+        num, bins, patches = plt.hist(apcor, bins=50, range=(-4.0,1.0), 
+                                      color='red', lw=2, histtype='step')
+
+        plt.vlines(apcor_avg, 0, 1, color='blue', linewidth=5)
+        plt.vlines(uplim, 0, 2, color='black', linestyle='--', linewidth=2)
+        plt.vlines(lowlim, 0, 2, color='black', linestyle='--', linewidth=2)
+
+        plt.xlabel('Aperture Correction')
+        plt.ylabel('N')
+        plt.minorticks_on()
+        plt.axis([-4.0,1.0, 0, max(num) + 0.1*max(num)])
+
+        fig.savefig(userinputs['OUTDIR'] + '/plots/apcor_' + filter + '.pdf')
+
+        return apcorrfile
