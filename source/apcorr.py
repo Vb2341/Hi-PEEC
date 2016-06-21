@@ -146,4 +146,4 @@ def calculation(userinputs):
 
         fig.savefig(userinputs['OUTDIR'] + '/plots/apcor_' + filter + '.pdf')
 
-        return apcorrfile
+    return apcorrfile
