@@ -114,7 +114,7 @@ def extraction(userinputs):
 
     return target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
-def photometry(userinputs, image, catalog, outputname, apertures):
+def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
     """Function for performing IRAF photometry
     @Params:
     userinputs  (dict)  - dictionary with results from the user input file.
@@ -175,18 +175,29 @@ def photometry(userinputs, image, catalog, outputname, apertures):
     filemanagement.remove_if_exists(output)
 
     # Run photometry
+    #--------------------------------------------------------------------------
+
+    # Set up IRAF params:
     iraf.datapars.epadu = exptime
 
     iraf.centerpars.calgorithm = 'centroid'
 
-    iraf.fitskypars.annulus = userinputs['ANNULUS']
-    iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
+    # Select the annulus depending on whether it is overwritten in the function call or not
+    if annulus='':
+        iraf.fitskypars.annulus = userinputs['ANNULUS']
+    else:
+        iraf.fitskypars.annulus = annulus
+    if dannulus='':
+        iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
+    else:
+        iraf.fitskypars.dannulu = dannulus
 
     iraf.photpars.apertures = apertures
     iraf.photpars.zmag = zp
 
+    # Do phot
     iraf.phot(image, catalog, output)
-
+    #--------------------------------------------------------------------------
 
 
     #Depending on the number of apertures used, different methods of saving the

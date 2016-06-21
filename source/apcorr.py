@@ -37,6 +37,7 @@ import pywcs
 #Import Hi-PEEC modules
 sys.path.insert(0, './source/')
 import filemanagement
+import extraction
 #------------------------------------------------------------------------------
 
 def calculation(userinputs):
@@ -69,7 +70,10 @@ def calculation(userinputs):
             #The 814 image has the filter information under the keyword FILTER2:
             filter = pyfits.getheader(image)['FILTER2']
 
-        out_photometry_file = phot_dir + 'apcorr_' + filter + '.mag'
+        out_photometry_file = phot_dir + '20px_apcorr_' + filter + '.mag'
+
+        extraction_catalog = extraction.photometry(userinputs, image, userinputs['STARS'], out_photometry_file, '20.0')
+
 
 
 
