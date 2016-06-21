@@ -122,6 +122,12 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     catalog     (STR)   - input coordinates where we want to do photometry
     outputname  (STR)   - name of the file where we store the measured results
     apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
+    annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
+                          user inputs is used
+    dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
+
+    @Returns
+    output      (STR)   - full path to the final catalog file
     """
     #set directory
     target_dir = userinputs['OUTDIR']
