@@ -189,11 +189,11 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     iraf.centerpars.calgorithm = 'centroid'
 
     # Select the annulus depending on whether it is overwritten in the function call or not
-    if annulus='':
+    if annulus == '':
         iraf.fitskypars.annulus = userinputs['ANNULUS']
     else:
         iraf.fitskypars.annulus = annulus
-    if dannulus='':
+    if dannulus == '':
         iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
     else:
         iraf.fitskypars.dannulu = dannulus
