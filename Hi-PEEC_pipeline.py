@@ -194,4 +194,4 @@ if userinput['APCORR']:
     print ''
     print 'Calculating aperture corrections'
 
-    apcorr.apcorr(userinput)
+    apcorr.calculation(userinput)
