@@ -186,6 +186,7 @@ if userinput['DO_PHOT']:
         i=i+1
         filemanagement.printProgress(i, l)
 
+
 #------------------------------------------------------------------------------
 # Calculate aperture corrections
 #------------------------------------------------------------------------------
@@ -195,3 +196,13 @@ if userinput['APCORR']:
     print 'Calculating aperture corrections'
 
     apcorr.calculation(userinput)
+
+
+#------------------------------------------------------------------------------
+# Create the final photometric catalogs
+#------------------------------------------------------------------------------
+
+# Get a list of the photometric catalogs & sort them
+phot_cats = glob.glob(target_dir + '/photometry/short_phot*')
+phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
+

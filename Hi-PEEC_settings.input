@@ -39,7 +39,7 @@ D_ANNULUS   1                                   # 12 Skyannulus width (pixels)
 
 #Aperture correction parameters:
 #---------------------------------------------------------------------------------------
-APCORR      True                                # 13 Run aperture correction step
+APCORR      True                                # 13 Run aperture correction calculation step
 STARS	    foregroundstars.coo                 # 14 File containing isolated star coords (xy) 
 						# needs to be located in the /init/ directory
 UPLIM       -0.1                                # 15 upper limit for avg aperture correction 
