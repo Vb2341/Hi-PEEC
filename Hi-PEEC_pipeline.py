@@ -202,6 +202,8 @@ if userinput['APCORR']:
 #------------------------------------------------------------------------------
 # Create the final photometric catalogs
 #------------------------------------------------------------------------------
+print ''
+print 'Creating final photometric catalog'
 
 # Get a list of the photometric catalogs & sort them by wavelength
 phot_cats = glob.glob(target_dir + '/photometry/short_phot*')
@@ -261,4 +263,39 @@ cat['# filters'] = 2
 cat['# filters'][cat[nfilt_4].index] = 4
 cat['# filters'][cat[nfilt_5].index] = 5
 
-print cat
+
+
+# Remove duplicate sources
+#------------------------------------------------------------------------------
+print '\t Removing duplicate sources'
+
+# Set tolerance to use
+tolerance = 0.5
+
+#Create boolean array
+for_removal = np.zeros(len(cat['X']), dtype = bool)
+
+prelength =len(cat['X'])
+
+x = cat['X'].as_matrix()
+y = cat['Y'].as_matrix()
+
+#Loop over sources to check if there are duplicates
+for k in np.arange(len(x - 1)):
+
+    # Calculate distance between kth object and subsequent objects
+    d = np.sqrt((x[k] - x[k + 1:])**2 + (y[k] - y[k + 1:])**2)
+
+    # If any of the distances calculated is less than the tolerance, change removal status
+    if (d < tolerance).any():
+        for_removal[k] = True
+
+#Drop the sources found in the loop
+cat = cat.drop(cat[for_removal].index)
+postlength = len(cat['X'])
+
+nr_of_duplicates = prelength - postlength
+
+print '\t Duplicates removed: {}'.format(nr_of_duplicates)
+
+
