@@ -215,7 +215,7 @@ filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 
 final_cat =pd.DataFrame()
 # Get the x y coordinates which are the same for all the filters.
-x, y = np.loadtxt(phot_cats[0], unpack=True, usecols=(0,1))
+x, y = np.loadtxt(phot_cats[np.where(filters==userinput['REF_FILTER']), unpack=True, usecols=(0,1))
 final_cat['X'] = x
 final_cat['Y'] = y
 
@@ -228,3 +228,4 @@ for a in range(len(phot_cats)):
     final_cat[mag_name] = mag
     final_cat[err_name] = err
 
+# Remove sources that are not detected in two contigous bands
