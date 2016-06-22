@@ -213,12 +213,12 @@ filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 # Get a list of images corresponding to the filters
 
 
-final_cat =pd.DataFrame()
+cat = pd.DataFrame()
 
 # Get the x y coordinates which are the same for all the filters.
 x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
-final_cat['X'] = x
-final_cat['Y'] = y
+cat['X'] = x
+cat['Y'] = y
 
 # Generate column labels
 maglabels = ['Mag ' + s for s in filters]
@@ -228,17 +228,37 @@ errlabels = ['Err ' + s for s in filters]
 for a in range(len(phot_cats)):
     # Read in data, append to final catalog dataframe.
     mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
-    final_cat[maglabels[a]] = mag
-    final_cat[errlabels[a]] = err
+    cat[maglabels[a]] = mag
+    cat[errlabels[a]] = err
+
 
 # Remove sources that are not detected in two contigous bands
+#------------------------------------------------------------------------------
 maxerr = userinput['MAGERR']
-sel = ((final_cat[errlabels[0]] <= maxerr) & (final_cat[errlabels[1]] <= maxerr)) | \
-         ((final_cat[errlabels[1]] <= maxerr) & (final_cat[errlabels[2]] <= maxerr)) | \
-         ((final_cat[errlabels[2]] <= maxerr) & (final_cat[errlabels[3]] <= maxerr)) | \
-         ((final_cat[errlabels[3]] <= maxerr) & (final_cat[errlabels[4]] <= maxerr))
+sel = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)) | \
+         ((cat[errlabels[1]] <= maxerr) & (cat[errlabels[2]] <= maxerr)) | \
+         ((cat[errlabels[2]] <= maxerr) & (cat[errlabels[3]] <= maxerr)) | \
+         ((cat[errlabels[3]] <= maxerr) & (cat[errlabels[4]] <= maxerr))
 
 # Remove all sources that do not match the above criterion
-final_cat = final_cat.drop(final_cat[~sel].index)
+cat = cat.drop(cat[~sel].index)
 
 
+
+# Assign number of filters
+#------------------------------------------------------------------------------
+nfilt_4 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
+          & (cat[errlabels[2]] <= maxerr) &(cat[errlabels[3]] <= maxerr)) \
+          | \
+          ((cat[errlabels[1]] <= maxerr) & (cat[errlabels[2]] <= maxerr) &
+          (cat[errlabels[3]] <= maxerr) & (cat[errlabels[4]] <= maxerr))
+
+nfilt_5 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
+          & (cat[errlabels[2]] <= maxerr) & (cat[errlabels[3]] <= maxerr)
+          & (cat[errlabels[4]] <= maxerr))
+
+cat['# filters'] = 2
+cat['# filters'][cat[nfilt_4].index] = 4
+cat['# filters'][cat[nfilt_5].index] = 5
+
+print cat
