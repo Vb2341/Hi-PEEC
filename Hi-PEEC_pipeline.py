@@ -210,6 +210,8 @@ phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
 # Get a list of filters from the filenames
 filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 
+# Get a list of images corresponding to the filters
+
 
 final_cat =pd.DataFrame()
 # Get the x y coordinates which are the same for all the filters.
@@ -217,8 +219,12 @@ x, y = np.loadtxt(phot_cats[0], unpack=True, usecols=(0,1))
 final_cat['X'] = x
 final_cat['Y'] = y
 
+# Construct the photometric catalog
 for a in range(len(phot_cats)):
-#    mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
-#    temp = pd.concat([pd.Series(mag), pd.Series(err)], axis=1, keys=['MAG', 'MAG_ERR'])
-#    final_cat[filters[a]]= temp
+    # Read in data, append to final catalog dataframe.
+    mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
+    mag_name = 'Mag ' + filters[a]
+    err_name = 'Err ' + filters[a]
+    final_cat[mag_name] = mag
+    final_cat[err_name] = err
 
