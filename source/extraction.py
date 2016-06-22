@@ -74,7 +74,21 @@ iraf.phot.verbose = 'no'
 iraf.phot.verify = 'no'
 #------------------------------------------------------------------------------
 
+def get_filter(image):
+    """
+    Returns the filter from a fits file by searching the header
+    @params
+    image (STR)     - path to image file
 
+    @returns
+    filter (STR)    - string with filter name
+    """
+    try:
+        filter = pyfits.getheader(image)['FILTER']
+    except KeyError:
+        #The 814 image has the filter information under the keyword FILTER2:
+        filter = pyfits.getheader(image)['FILTER2']
+    return filter
 
 def extraction(userinputs):
     #Set up required variables
@@ -155,11 +169,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
 
     # Get filter from header
-    try:
-        filter = pyfits.getheader(image)['FILTER']
-    except KeyError:
-        #The 814 image has the filter information under the keyword FILTER2:
-        filter = pyfits.getheader(image)['FILTER2']
+    filter = get_filter(image)
 
 
     # Set the necessary variables for photometry on the reference image
