@@ -299,3 +299,83 @@ nr_of_duplicates = prelength - postlength
 print '\t Duplicates removed: {}'.format(nr_of_duplicates)
 
 
+
+# Remove duplicate sources
+#------------------------------------------------------------------------------
+
+# Assign the galactic extinction for the five instrument/filter combinations
+# Read in extinction file as array (a vs u means acs/uvis)
+extfile = target_dir + '/init/legus_galactic_extinction.tab'
+target_ext, uf2, uf3, af4, uf4, af5, uf5, af6, af8, uf8 = np.loadtxt(extfile, unpack=True, skiprows=2, dtype='str')
+
+# Pick extinctions for our target only
+target = userinput['TARGET'].lower()
+id = (target_ext == target)
+
+imlist = glob.glob(target_dir + '/img/*_sci.fits')
+
+# Save extinction ordered by filter wavelength
+gal_ext = np.zeros(5)
+
+for image in imlist:
+
+    # Get filter from filename
+    filter = extraction.get_filter(image)
+
+    # Get instrument from header
+    instr = pyfits.getheader(image)['INSTRUME']
+    instr = instr.lower()
+
+    if (instr == 'wfc3') & (filter == 'f225w'):
+        gal_ext[0] = float(uf2[id][0])
+
+    if (instr == 'wfc3') & (filter == 'f336w'):
+        gal_ext[1] = float(uf3[id][0])
+
+    if (instr == 'acs') & (filter == 'f435w'):
+        gal_ext[2] = float(af4[id][0])
+
+    if (instr == 'wfc3') & (filter == 'f438w'):
+        gal_ext[2] = float(uf4[id][0])
+
+    if (instr == 'acs') & (filter == 'f555w'):
+        gal_ext[3] = float(af5[id][0])
+
+    if (instr == 'wfc3') & (filter == 'f555w'):
+        gal_ext[3] = float(uf5[id][0])
+
+    if (instr == 'acs') & (filter == 'f606w'):
+        gal_ext[3] = float(af6[id][0])
+
+    if (instr == 'acs' ) & (filter == 'f814w'):
+        gal_ext[4] = float(af8[id][0])
+
+    if (instr == 'wfc3') & (filter == 'f814w'):
+        gal_ext[4] = float(uf8[id][0])
+
+print gal_ext
+
+# Make an array of cluster ids
+ids = np.arange(len(cat['X'])) + 1
+
+# Convert xy coordinates into RA Dec of reference filter
+ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
+
+# Get header from reference image using pyfits
+header_ref = pyfits.getheader(ref_image)
+
+# Get wcs solution from reference image header
+wcs_ref = pywcs.WCS(header_ref)
+
+# Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
+ra, dec = wcs_ref.wcs_pix2sky(cat['X'], cat['Y'], 1)
+cat.insert(2,'RA',ra)
+cat.insert(3,'DEC',dec)
+
+# Calculate apparent magnitude of absolute mag limit (-6)
+
+distance = userinput['DISTANCE']
+
+dist_mod = 5 * np.log10(distance) + 25.
+m_apparent = dist_mod - 6.
+
