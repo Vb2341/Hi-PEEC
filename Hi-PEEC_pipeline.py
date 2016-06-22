@@ -214,18 +214,31 @@ filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 
 
 final_cat =pd.DataFrame()
+
 # Get the x y coordinates which are the same for all the filters.
 x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
 final_cat['X'] = x
 final_cat['Y'] = y
 
+# Generate column labels
+maglabels = ['Mag ' + s for s in filters]
+errlabels = ['Err ' + s for s in filters]
+
 # Construct the photometric catalog
 for a in range(len(phot_cats)):
     # Read in data, append to final catalog dataframe.
     mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
-    mag_name = 'Mag ' + filters[a]
-    err_name = 'Err ' + filters[a]
-    final_cat[mag_name] = mag
-    final_cat[err_name] = err
+    final_cat[maglabels[a]] = mag
+    final_cat[errlabels[a]] = err
 
 # Remove sources that are not detected in two contigous bands
+maxerr = userinput['MAGERR']
+sel = ((final_cat[errlabels[0]] <= maxerr) & (final_cat[errlabels[1]] <= maxerr)) | \
+         ((final_cat[errlabels[1]] <= maxerr) & (final_cat[errlabels[2]] <= maxerr)) | \
+         ((final_cat[errlabels[2]] <= maxerr) & (final_cat[errlabels[3]] <= maxerr)) | \
+         ((final_cat[errlabels[3]] <= maxerr) & (final_cat[errlabels[4]] <= maxerr))
+
+# Remove all sources that do not match the above criterion
+final_cat = final_cat.drop(final_cat[~sel].index)
+
+
