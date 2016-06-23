@@ -348,7 +348,7 @@ for image in imlist:
             err[a] = np.sqrt(err[a]**2 + ap_err**2)
 
     # Insert the new mags into the catalog
-    cat['Mag' + filter] = mag
+    cat['Mag ' + filter] = mag
     cat['Err ' + filter] = err
 
 
@@ -380,7 +380,7 @@ m_apparent = dist_mod - 6.
 #------------------------------------------------------------------------------
 print '\t Save the final catalog to file'
 date = datetime.datetime.now().strftime ("%Y-%m-%d")
-#roundcat = cat.map(lambda x: '%2.1f' % x)
-cat = cat.reset_index()
-cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + ' ' + date + '.cat',
+
+cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
+cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
            sep='\t', float_format = '%.3f')
