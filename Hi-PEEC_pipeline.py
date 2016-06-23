@@ -22,7 +22,6 @@ from __future__ import division#,print_function
 #import math, datahandling and plotting utils
 import numpy as np
 import pandas as pd
-import math
 import matplotlib.pyplot as plt
 
 #sys utils
@@ -32,6 +31,7 @@ import shutil
 import sys
 import string
 import ast
+import datetime
 
 #astronomy utils
 import pyfits
@@ -236,6 +236,7 @@ for a in range(len(phot_cats)):
 
 # Remove sources that are not detected in two contigous bands
 #------------------------------------------------------------------------------
+print '\t Removing sources not detected in 2 contiguous filters'
 maxerr = userinput['MAGERR']
 sel = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)) | \
          ((cat[errlabels[1]] <= maxerr) & (cat[errlabels[2]] <= maxerr)) | \
@@ -249,6 +250,7 @@ cat = cat.drop(cat[~sel].index)
 
 # Assign number of filters
 #------------------------------------------------------------------------------
+print '\t Assigning number of filters'
 nfilt_4 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
           & (cat[errlabels[2]] <= maxerr) &(cat[errlabels[3]] <= maxerr)) \
           | \
@@ -296,16 +298,16 @@ postlength = len(cat['X'])
 
 nr_of_duplicates = prelength - postlength
 
-print '\t Duplicates removed: {}'.format(nr_of_duplicates)
+print '\t\t Duplicates removed: {}'.format(nr_of_duplicates)
 
 
 
-# Save extinction ordered by filter wavelength
+# Apply Extinction and aperture corrections
 #------------------------------------------------------------------------------
-
+print '\t Apply extinction and aperture corrections'
 # Assign the galactic extinction for the five instrument/filter combinations
 # Read in extinction file as array (a vs u means acs/uvis)
-extfile = target_dir + '/init/legus_galactic_extinction.tab'
+extfile = target_dir + '/init/Hi-PEEC_galactic_extinction.tab'
 extinctions = pd.read_table(extfile, header=[0,1],index_col=0, sep=r"\s*")
 
 # Pick extinctions for our target only
@@ -319,9 +321,6 @@ imlist = glob.glob(target_dir + '/img/*_sci.fits')
 # Load apcorrs
 apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt', unpack=True, usecols=(0, 1, 2))
 
-#print extinctions
-#print extinctions.loc[['F22']]
-
 for image in imlist:
 
     # Get filter from filename
@@ -330,13 +329,9 @@ for image in imlist:
     # Get instrument from header
     instr = pyfits.getheader(image)['INSTRUME']
     instr = instr.lower()
-    if instr == 'wfc3':
-        instr = 'uvis'
 
     # Select the correct extinction
     gal_ext = extinctions[filter.lower()][instr]
-    print filter
-    print gal_ext
 
     # Select the appropriate mag column
     mag = cat['Mag ' + filter].as_matrix()
@@ -380,3 +375,11 @@ distance = userinput['DISTANCE']
 dist_mod = 5 * np.log10(distance) + 25.
 m_apparent = dist_mod - 6.
 
+
+# Save the final catalog to file
+#------------------------------------------------------------------------------
+print '\t Save the final catalog to file'
+date = datetime.datetime.now().strftime ("%Y-%m-%d")
+#roundcat = cat.map(lambda x: '%2.1f' % x)
+cat = cat.reset_index()
+cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + date + '.cat', sep='\t', float_format = '%.3f')
