@@ -2,43 +2,40 @@
 
 
 ### What is this repository for? ###
-This repo contains the code for cluster extraction in Hi-PEEC and primarily the scripts for running tests on the extraction.
+This repo contains the code for cluster extraction in Hi-PEEC based on the LEGUS cluster extraction script.
 
 ### How do I get set up? ###
 
-* In order to run the tests you need the following folder structure
+####Using Git####
+The easiest way to get the required folder structure is using __Git__. To do this run the following in a terminal:
+
 ```
-#!python
-
-/Data/
-    /Object1/
-        -fitsfiles
-    /Object2/
-        -fitsfiles
-    ....
-/Pipeline/
-    /init/
-        default.nnw
-        R2_wl_aa.config
-        output.param
-    /data/
-        legus_galactic_extinction.tab
-        legus_zeropoints.tab
-    legus_clusters_extraction.py
-    legus_clusters_extraction.input
-    progress.py
-    extraction_test.py
-    
+git clone https://C0gito@bitbucket.org/C0gito/hi-peec.git
 ```
-###How to run the test software###
-1. Set up above folder structure
 
-2. run ```python extraction.py``` in a terminal
+which will give a copy of the entire source tree in the last stable version, the 'master'  branch. If you want the 
+development version of the code which is not guaranteed to work you can then run 
 
-3. This will display a prompt where you are asked to select the object. This object name must match one of the  ```/Object/``` filenames above.
+```
+git fetch && git checkout devel
+```
+which will then load the devel branch making your directory mirror that. 
 
-4. Next the program will display the contents of the legus_clusters_extraction.input file and ask if you want to change any settings. If the answer is yes the program will open vim allowing you to change the inputfile.
+#####Staying up to date:#####
+Doing the above means it is easy to stay up to date with the changes in the code. You do this simply by running 
+```
+git pull
+```
+in the directory you placed the source files in.
 
-5. Next the program will check for the existence of a directory called ```Extraction_test```. If there is such a directory it will ask if you want to clear it before running the new test. If 'yes' or if there is no such directory the contents of the ```/Pipeline/``` dir and the fits files corresponding to the selected object will be copied over to the test dir.
+####Without Git####
+The second way is to simply download the zip file that is contained in the master branch. Note that this is updated less
+often.
 
-6. The program now runs the extraction pipeline with the requested settings.
+
+###How to run the pipeline###
+1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/projectstructure))
+
+3. Check the Hi-PEEC_settings.input file to make sure that the inputs are appropriate.
+
+2. Run ```python Hi-PEEC_pipeline.py``` in a terminal
