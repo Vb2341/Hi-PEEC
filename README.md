@@ -26,7 +26,14 @@ Doing the above means it is easy to stay up to date with the changes in the code
 ```
 git pull
 ```
-in the directory you placed the source files in.
+in the directory you placed the source files in. Note that if you have changed any of the input files that are tracked 
+by git this might give you an error saying something like ```You have uncommited changes```. To get around this simply 
+run 
+```
+git stash
+```
+and then try to pull from the repository again.
+
 
 ####Without Git####
 The second way is to simply download the zip file that is contained in the master branch. Note that this is updated less
