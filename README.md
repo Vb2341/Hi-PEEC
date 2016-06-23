@@ -7,7 +7,7 @@ This repo contains the code for cluster extraction in Hi-PEEC based on the LEGUS
 ### How do I get set up? ###
 
 ####Using Git####
-The easiest way to get the required folder structure is using __Git__. To do this run the following in a terminal:
+The easiest way to get the required folder structure is using [__Git__](https://git-scm.com/). To do this run the following in a terminal:
 
 ```
 git clone https://C0gito@bitbucket.org/C0gito/hi-peec.git
