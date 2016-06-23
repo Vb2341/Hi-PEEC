@@ -300,22 +300,27 @@ print '\t Duplicates removed: {}'.format(nr_of_duplicates)
 
 
 
-# Remove duplicate sources
+# Save extinction ordered by filter wavelength
 #------------------------------------------------------------------------------
 
 # Assign the galactic extinction for the five instrument/filter combinations
 # Read in extinction file as array (a vs u means acs/uvis)
 extfile = target_dir + '/init/legus_galactic_extinction.tab'
-target_ext, uf2, uf3, af4, uf4, af5, uf5, af6, af8, uf8 = np.loadtxt(extfile, unpack=True, skiprows=2, dtype='str')
+extinctions = pd.read_table(extfile, header=[0,1],index_col=0, sep=r"\s*")
 
 # Pick extinctions for our target only
 target = userinput['TARGET'].lower()
-id = (target_ext == target)
+
+extinctions = extinctions.loc[['ngc1614']]
 
 imlist = glob.glob(target_dir + '/img/*_sci.fits')
 
-# Save extinction ordered by filter wavelength
-gal_ext = np.zeros(5)
+
+# Load apcorrs
+apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt', unpack=True, usecols=(0, 1, 2))
+
+#print extinctions
+#print extinctions.loc[['F22']]
 
 for image in imlist:
 
@@ -325,35 +330,32 @@ for image in imlist:
     # Get instrument from header
     instr = pyfits.getheader(image)['INSTRUME']
     instr = instr.lower()
+    if instr == 'wfc3':
+        instr = 'uvis'
 
-    if (instr == 'wfc3') & (filter == 'f225w'):
-        gal_ext[0] = float(uf2[id][0])
+    # Select the correct extinction
+    gal_ext = extinctions[filter.lower()][instr]
+    print filter
+    print gal_ext
 
-    if (instr == 'wfc3') & (filter == 'f336w'):
-        gal_ext[1] = float(uf3[id][0])
+    # Select the appropriate mag column
+    mag = cat['Mag ' + filter].as_matrix()
+    err = cat['Err ' + filter].as_matrix()
 
-    if (instr == 'acs') & (filter == 'f435w'):
-        gal_ext[2] = float(af4[id][0])
+    # Select the apcor and apcor error corresponding to the current filter
+    ap_corr = apc[apf == filter]
+    ap_err = ape[apf == filter]
 
-    if (instr == 'wfc3') & (filter == 'f438w'):
-        gal_ext[2] = float(uf4[id][0])
+    # Apply extinctions and apcorrs
+    for a in range(len(mag)):
+        if mag[a]!=99.999 and mag[a]!=66.666:
+            mag[a] = mag[a] + ap_corr - gal_ext
+            err[a] = np.sqrt(err[a]**2 + ap_err**2)
 
-    if (instr == 'acs') & (filter == 'f555w'):
-        gal_ext[3] = float(af5[id][0])
+    # Insert the new mags into the catalog
+    cat['Mag' + filter] = mag
+    cat['Err ' + filter] = err
 
-    if (instr == 'wfc3') & (filter == 'f555w'):
-        gal_ext[3] = float(uf5[id][0])
-
-    if (instr == 'acs') & (filter == 'f606w'):
-        gal_ext[3] = float(af6[id][0])
-
-    if (instr == 'acs' ) & (filter == 'f814w'):
-        gal_ext[4] = float(af8[id][0])
-
-    if (instr == 'wfc3') & (filter == 'f814w'):
-        gal_ext[4] = float(uf8[id][0])
-
-print gal_ext
 
 # Make an array of cluster ids
 ids = np.arange(len(cat['X'])) + 1
@@ -373,7 +375,6 @@ cat.insert(2,'RA',ra)
 cat.insert(3,'DEC',dec)
 
 # Calculate apparent magnitude of absolute mag limit (-6)
-
 distance = userinput['DISTANCE']
 
 dist_mod = 5 * np.log10(distance) + 25.
