@@ -382,4 +382,5 @@ print '\t Save the final catalog to file'
 date = datetime.datetime.now().strftime ("%Y-%m-%d")
 #roundcat = cat.map(lambda x: '%2.1f' % x)
 cat = cat.reset_index()
-cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + date + '.cat', sep='\t', float_format = '%.3f')
+cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + ' ' + date + '.cat',
+           sep='\t', float_format = '%.3f')
