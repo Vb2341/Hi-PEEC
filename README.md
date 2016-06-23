@@ -39,6 +39,8 @@ and then try to pull from the repository again.
 The second way is to simply download the zip file that is contained in the master branch. Note that this is updated less
 often.
 
+You download the file by going to ```Source``` in the left sidebar, clicking on the file in the filelist and then clicking ```Raw```
+
 
 ###How to run the pipeline###
 1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/projectstructure))
