@@ -46,27 +46,27 @@ Running the pipeline requires a working python 2.7 installation with the followi
 ####math, datahandling and plotting utils####
 These are the large and heavy packages 
 ´´´
-    numpy
-    pandas
-    matplotlib.pyplot
+numpy
+pandas
+matplotlib.pyplot
 ´´´
 
 ####sys utils####
 Most of these should be included in a standard python installation 
 ´´´
-    os, glob
-    time
-    shutil
-    sys
-    string
-    ast
-    datetime
+os, glob
+time
+shutil
+sys
+string
+ast
+datetime
 ´´´
 
 ####astronomy utils####
 These are normally included in scientific distributions e.g. Ureka
 ´´´
-    pyfits
-    pyraf
-    pywcs
+pyfits
+pyraf
+pywcs
 ´´´
