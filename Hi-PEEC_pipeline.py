@@ -120,6 +120,8 @@ if userinput['EXTRACT']:
     print 'Extracting sources from reference image:'
     print ''
     extraction_cat = extraction.extraction(userinput)
+else:
+    target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
 
 #------------------------------------------------------------------------------
