@@ -49,7 +49,7 @@ These are the large and heavy packages
     pandas
     matplotlib.pyplot
 
-#sys utils
+####sys utils####
 Most of these should be included in a standard python installation 
     os, glob
     time
@@ -59,7 +59,7 @@ Most of these should be included in a standard python installation
     ast
     datetime
 
-#astronomy utils
+####astronomy utils####
 These are normally included in scientific distributions e.g. Ureka
     pyfits
     pyraf
