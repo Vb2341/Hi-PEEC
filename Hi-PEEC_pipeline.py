@@ -178,11 +178,7 @@ if userinput['DO_PHOT']:
     filemanagement.printProgress(i, l)
 
     for image in imagelist:
-        try:
-            filter = pyfits.getheader(image)['FILTER']
-        except KeyError:
-            #The 814 image has the filter information under the keyword FILTER2:
-            filter = pyfits.getheader(image)['FILTER2']
+        extraction.get_filter(image)
 
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
         extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
