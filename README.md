@@ -52,6 +52,8 @@ You download the file by going to ```Source``` in the left sidebar, clicking on 
 ###Dependencies###
 Running the pipeline requires a working python 2.7 installation with the following packages installed:
 
+The pipeline has been thus far only been tested on a Linux Kubuntu system.
+
 ####math, datahandling and plotting utils####
 These are the large and heavy packages 
 ```
@@ -79,4 +81,4 @@ pyfits
 pyraf
 pywcs
 ```
->>>>>>> devel
+
