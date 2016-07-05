@@ -120,6 +120,8 @@ if userinput['EXTRACT']:
     print 'Extracting sources from reference image:'
     print ''
     extraction_cat = extraction.extraction(userinput)
+else:
+    target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
 
 #------------------------------------------------------------------------------
@@ -176,11 +178,7 @@ if userinput['DO_PHOT']:
     filemanagement.printProgress(i, l)
 
     for image in imagelist:
-        try:
-            filter = pyfits.getheader(image)['FILTER']
-        except KeyError:
-            #The 814 image has the filter information under the keyword FILTER2:
-            filter = pyfits.getheader(image)['FILTER2']
+        filter = extraction.get_filter(image)
 
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
         extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
@@ -384,3 +382,10 @@ date = datetime.datetime.now().strftime ("%Y-%m-%d")
 cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
 cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
            sep='\t', float_format = '%.3f')
+print ''
+nr_of_clusters = len (cat['# filters'])
+print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
+nr_of_4filters = len(cat[cat['# filters']==4])
+print '\t \t Nr of 4 filter detections: {}'.format(nr_of_4filters)
+nr_of_5filters = len(cat[cat['# filters']==5])
+print '\t \t Nr of 5 filter detections: {}'.format(nr_of_5filters)

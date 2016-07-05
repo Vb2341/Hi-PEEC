@@ -48,3 +48,35 @@ You download the file by going to ```Source``` in the left sidebar, clicking on 
 3. Check the Hi-PEEC_settings.input file to make sure that the inputs are appropriate.
 
 2. Run ```python Hi-PEEC_pipeline.py``` in a terminal
+
+###Dependencies###
+Running the pipeline requires a working python 2.7 installation with the following packages installed:
+
+####math, datahandling and plotting utils####
+These are the large and heavy packages 
+```
+numpy
+pandas
+matplotlib.pyplot
+```
+
+####sys utils####
+Most of these should be included in a standard python installation 
+```
+os, glob
+time
+shutil
+sys
+string
+ast
+datetime
+```
+
+####astronomy utils####
+These are normally included in scientific distributions e.g. Ureka
+```
+pyfits
+pyraf
+pywcs
+```
+>>>>>>> devel
