@@ -417,6 +417,15 @@ print '\t \t Nr of 5 filter detections: {}'.format(nr_of_5filters)
 logging.info('Nr of 5 filter detections: {}'.format(nr_of_5filters))
 
 #------------------------------------------------------------------------------
+# CREATE VISUAL INSPECTION CATALOG
+#------------------------------------------------------------------------------
+condition = ((cat['# filters'] == 5) | (cat['# filters'] == 4))
+vis_cat = cat.drop(cat[~condition].index)
+
+vis_cat.to_csv(target_dir+'/visual_inspection_'+userinput['TARGET'] + '_' + date + '.cat',
+           sep='\t', float_format = '%.3f')
+
+#------------------------------------------------------------------------------
 # FINAL CLEANUPS
 #------------------------------------------------------------------------------
 
