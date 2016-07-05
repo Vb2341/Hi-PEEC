@@ -28,6 +28,7 @@ import shutil
 import sys
 import string
 import ast
+import logging
 
 #astronomy utils
 import pyfits
@@ -69,13 +70,9 @@ def calculation(userinputs):
     apcorrfile = userinputs['OUTDIR'] + '/photometry/avg_aperture_correction.txt'
     filemanagement.remove_if_exists(apcorrfile)
 
-
+    logging.info('Doing apcorr photometry')
     for image in imagelist:
-        try:
-            filter = pyfits.getheader(image)['FILTER']
-        except KeyError:
-            #The 814 image has the filter information under the keyword FILTER2:
-            filter = pyfits.getheader(image)['FILTER2']
+        filter = extraction.get_filter(image)
 
         #-----------------------------------------------------------------------
         # Do required photometry
@@ -88,7 +85,7 @@ def calculation(userinputs):
                             userinputs['STARS'], photometry_file_20,
                             '20.0', annulus=21.0, dannulus=1.0)
 
-        # 4px aperture photometry 
+        # 4px aperture photometry
         photometry_file_4 = phot_dir + '4px_apcorr_' + filter + '.mag'
 
         apcorr_cat_4 = extraction.photometry(userinputs, image,
@@ -99,7 +96,7 @@ def calculation(userinputs):
         #-----------------------------------------------------------------------
         # Calculate apcorrs
         #-----------------------------------------------------------------------
-       
+
         # Load the photometry
         x, y, mag_4 = np.loadtxt(apcorr_cat_4, unpack=True, usecols=(0,1,2))
         mag_20 = np.loadtxt(apcorr_cat_20, unpack=True, usecols=(2,))
@@ -114,6 +111,9 @@ def calculation(userinputs):
             apcor_avg = np.mean(apcor[lim])
             apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
         except RuntimeWarning:
+            loggin.critical('No stars in the apcorr star list after filtering. Quitting')
+            loggin.debug('Check {} and the aperture correction requirements'\
+                         .format(userinputs['STARS']))
             sys.exit('No stars left after filtering. Check {} and the aperture \
                 correction requirements'.format(userinputs['STARS']))
 
@@ -132,7 +132,8 @@ def calculation(userinputs):
         fig = plt.figure(figsize = (7,7))
 
         # Draw histogram
-        num, bins, patches = plt.hist(apcor, bins=50, range=(-4.0,1.0), 
+        logging.info('Create aperture correction plots')
+        num, bins, patches = plt.hist(apcor, bins=50, range=(-4.0,1.0),
                                       color='red', lw=2, histtype='step')
 
         plt.vlines(apcor_avg, 0, 1, color='blue', linewidth=5)

@@ -33,6 +33,12 @@ import string
 import ast
 import datetime
 
+import logging
+#If there is a problem, set level=logging.DEBUG to get additional information in the log file
+logging.basicConfig(filename='Hi-PEEC.log', filemode='w', level=logging.INFO,
+                    format='%(levelname)s: %(filename)s:%(lineno)s:%(funcName)s() - %(asctime)s: %(message)s',
+                    datefmt='%I:%M:%S')
+
 #astronomy utils
 import pyfits
 from pyraf import iraf
@@ -54,6 +60,8 @@ print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
 print 'Version 0.1'
 print 'Last changed: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
+logging.info('Run started')
+
 
 # Location of python code
 pydir = os.getcwd()
@@ -65,6 +73,8 @@ infile = 'Hi-PEEC_settings.input'
 if os.path.exists(pydir + '/' + infile) == False:
     print ''
     print 'File ', infile, ' could not be found in ', pydir
+    logging.critical('Could not find input file, quit process')
+    logging.debug('Looking for {} '.format(pydir + '/' + infile))
     sys.exit('quitting now...')
 
 #Read in file
@@ -84,6 +94,7 @@ for key in userinput:
 if userinput['OUTDIR']==False:
     target_dir = os.getcwd()
     userinput['OUTDIR'] = target_dir
+    logging.info('No output directory specified, using {}'.format(target_dir))
 else:
     target_dir = userinput['OUTDIR']
 
@@ -98,9 +109,6 @@ print ''
 print '_______________________________________________________________________'
 
 
-
-
-
 #==============================================================================
 #RUNNING THE PIPELINE
 #==============================================================================
@@ -109,6 +117,7 @@ print '_______________________________________________________________________'
 #Setting up folder structure at desired location
 #------------------------------------------------------------------------------
 if userinput['SETUP']:
+    logging.info('RUNNING SETUP')
     filemanagement.setup(userinput, pydir)
 
 
@@ -116,6 +125,7 @@ if userinput['SETUP']:
 #Running initial extraction
 #------------------------------------------------------------------------------
 if userinput['EXTRACT']:
+    logging.info('RUNNING EXTRACTION')
     print ''
     print 'Extracting sources from reference image:'
     print ''
@@ -128,6 +138,7 @@ else:
 #Create growth curve:
 #------------------------------------------------------------------------------
 if userinput['DO_GROWTH']:
+    logging.info('RUNNING GROWTH CURVE ANALYSIS')
 
     # Running initial photometry on the isolated stars & creating a growth curve
     print ''
@@ -149,10 +160,12 @@ if userinput['DO_GROWTH']:
 #Do science photometry:
 #------------------------------------------------------------------------------
 if userinput['DO_PHOT']:
+    logging.info('RUNNING SCIENCE PHOTOMETRY')
 
     #Do an initial centering photometry run
     print ''
-    print 'Centering coordinates'
+    print 'Running science photometry step'
+    print '\t Centering coordinates'
     extraction.photometry(userinput, userinput['IMAGE'],
                                    extraction_cat, 'centercoords.mag',
                                    str(userinput['AP_RAD']))
@@ -168,7 +181,7 @@ if userinput['DO_PHOT']:
 
 
     print ''
-    print 'Doing photometry on full image set'
+    print '\tDoing photometry on full image set:'
 
     imagelist = glob.glob(target_dir+'/img/*sci*.fits')
 
@@ -191,6 +204,7 @@ if userinput['DO_PHOT']:
 #------------------------------------------------------------------------------
 
 if userinput['APCORR']:
+    logging.info('RUNNING APCORR STEP')
     print ''
     print 'Calculating aperture corrections'
 
@@ -200,19 +214,19 @@ if userinput['APCORR']:
 #------------------------------------------------------------------------------
 # Create the final photometric catalogs
 #------------------------------------------------------------------------------
+logging.info('CREATING FINAL CATALOG')
 print ''
 print 'Creating final photometric catalog'
 
 # Get a list of the photometric catalogs & sort them by wavelength
 phot_cats = glob.glob(target_dir + '/photometry/short_phot*')
 phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
+logging.debug('List of photometric catalogs to include in final:{}'.format(phot_cats))
 
 # Get a list of filters from the filenames
 filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 
-# Get a list of images corresponding to the filters
-
-
+# Create the catalog dataframe
 cat = pd.DataFrame()
 
 # Get the x y coordinates which are the same for all the filters.
@@ -225,12 +239,12 @@ maglabels = ['Mag ' + s for s in filters]
 errlabels = ['Err ' + s for s in filters]
 
 # Construct the photometric catalog
+logging.info('Assembling the catalog')
 for a in range(len(phot_cats)):
     # Read in data, append to final catalog dataframe.
     mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
     cat[maglabels[a]] = mag
     cat[errlabels[a]] = err
-
 
 # Remove sources that are not detected in two contigous bands
 #------------------------------------------------------------------------------
@@ -242,13 +256,19 @@ sel = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)) | \
          ((cat[errlabels[3]] <= maxerr) & (cat[errlabels[4]] <= maxerr))
 
 # Remove all sources that do not match the above criterion
+len_before = len(cat['X'])
 cat = cat.drop(cat[~sel].index)
+len_after = len(cat['X'])
+
+logging.info('Removed all sources not detected in 2 contiguous filters.\
+Nr of sources removed {}'.format(len_before-len_after))
 
 
 
 # Assign number of filters
 #------------------------------------------------------------------------------
 print '\t Assigning number of filters'
+logging.info('Assigning numbers of filters')
 nfilt_4 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
           & (cat[errlabels[2]] <= maxerr) &(cat[errlabels[3]] <= maxerr)) \
           | \
@@ -297,6 +317,7 @@ postlength = len(cat['X'])
 nr_of_duplicates = prelength - postlength
 
 print '\t\t Duplicates removed: {}'.format(nr_of_duplicates)
+logging.info('{} duplicate sources removed'.format(nr_of_duplicates))
 
 
 
@@ -317,6 +338,7 @@ imlist = glob.glob(target_dir + '/img/*_sci.fits')
 
 
 # Load apcorrs
+logging.info('Loading apcorrs from file')
 apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt', unpack=True, usecols=(0, 1, 2))
 
 for image in imlist:
@@ -339,6 +361,7 @@ for image in imlist:
     ap_corr = apc[apf == filter]
     ap_err = ape[apf == filter]
 
+    logging.debug('Corrections for {}: aperture:{}, extrinction{}'.format(filter,ap_corr,gal_ext))
     # Apply extinctions and apcorrs
     for a in range(len(mag)):
         if mag[a]!=99.999 and mag[a]!=66.666:
@@ -350,9 +373,6 @@ for image in imlist:
     cat['Err ' + filter] = err
 
 
-# Make an array of cluster ids
-ids = np.arange(len(cat['X'])) + 1
-
 # Convert xy coordinates into RA Dec of reference filter
 ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
 
@@ -360,6 +380,7 @@ ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
 header_ref = pyfits.getheader(ref_image)
 
 # Get wcs solution from reference image header
+logging.info('Get and insert WCS coordinates for each source')
 wcs_ref = pywcs.WCS(header_ref)
 
 # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
@@ -385,7 +406,21 @@ cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
 print ''
 nr_of_clusters = len (cat['# filters'])
 print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
+logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
+
 nr_of_4filters = len(cat[cat['# filters']==4])
 print '\t \t Nr of 4 filter detections: {}'.format(nr_of_4filters)
+logging.info('Nr of 4 filter detections: {}'.format(nr_of_4filters))
+
 nr_of_5filters = len(cat[cat['# filters']==5])
 print '\t \t Nr of 5 filter detections: {}'.format(nr_of_5filters)
+logging.info('Nr of 5 filter detections: {}'.format(nr_of_5filters))
+
+#------------------------------------------------------------------------------
+# FINAL CLEANUPS
+#------------------------------------------------------------------------------
+
+# Move the log file to the outdirectory
+os.chdir(pydir)
+cmd = 'mv Hi-PEEC.log ' + target_dir + '/Hi-PEEC.log'
+os.system(cmd)
