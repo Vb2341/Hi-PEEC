@@ -246,42 +246,27 @@ for a in range(len(phot_cats)):
     cat[maglabels[a]] = mag
     cat[errlabels[a]] = err
 
-# Remove sources that are not detected in two contigous bands
+# Remove sources that are not detected in BVI
 #------------------------------------------------------------------------------
-print '\t Removing sources not detected in 2 contiguous filters'
 maxerr = userinput['MAGERR']
-sel = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)) | \
-         ((cat[errlabels[1]] <= maxerr) & (cat[errlabels[2]] <= maxerr)) | \
-         ((cat[errlabels[2]] <= maxerr) & (cat[errlabels[3]] <= maxerr)) | \
-         ((cat[errlabels[3]] <= maxerr) & (cat[errlabels[4]] <= maxerr))
+BVImags = ['Mag ' + s for s in filters if s in ['F336W','F555W','F814W']]
+BVIerrs = ['Err ' + s for s in filters if s in ['F336W','F555W','F814W']]
+logging.debug('selecting sources detected in {}'.format(BVImags))
+try:
+    selection = ((cat[BVIerrs[0]]<=maxerr)
+             & (cat[BVIerrs[1]]<=maxerr)
+             & (cat[BVIerrs[2]]<=maxerr))
+except IndexError:
+    logging.critical('F336W,F555W, and F814W are not all present. Unable to do selection')
+    logging.debug('Filters present:{}'.format(filters))
+    sys.exit('F336W,F555W, and F814W are not all present. Unable to do selection. Shutting down')
 
-# Remove all sources that do not match the above criterion
 len_before = len(cat['X'])
-cat = cat.drop(cat[~sel].index)
+cat = cat.drop(cat[~selection].index)
 len_after = len(cat['X'])
 
-logging.info('Removed all sources not detected in 2 contiguous filters.\
+logging.info('Removed all sources not detected in BVI filters.\
 Nr of sources removed {}'.format(len_before-len_after))
-
-
-
-# Assign number of filters
-#------------------------------------------------------------------------------
-print '\t Assigning number of filters'
-logging.info('Assigning numbers of filters')
-nfilt_4 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
-          & (cat[errlabels[2]] <= maxerr) &(cat[errlabels[3]] <= maxerr)) \
-          | \
-          ((cat[errlabels[1]] <= maxerr) & (cat[errlabels[2]] <= maxerr) &
-          (cat[errlabels[3]] <= maxerr) & (cat[errlabels[4]] <= maxerr))
-
-nfilt_5 = ((cat[errlabels[0]] <= maxerr) & (cat[errlabels[1]] <= maxerr)
-          & (cat[errlabels[2]] <= maxerr) & (cat[errlabels[3]] <= maxerr)
-          & (cat[errlabels[4]] <= maxerr))
-
-cat['# filters'] = 2
-cat['# filters'][cat[nfilt_4].index] = 4
-cat['# filters'][cat[nfilt_5].index] = 5
 
 
 
@@ -339,7 +324,8 @@ imlist = glob.glob(target_dir + '/img/*_sci.fits')
 
 # Load apcorrs
 logging.info('Loading apcorrs from file')
-apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt', unpack=True, usecols=(0, 1, 2))
+apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt',
+                              unpack=True, usecols=(0, 1, 2))
 
 for image in imlist:
 
@@ -361,7 +347,7 @@ for image in imlist:
     ap_corr = apc[apf == filter]
     ap_err = ape[apf == filter]
 
-    logging.debug('Corrections for {}: aperture:{}, extrinction{}'.format(filter,ap_corr,gal_ext))
+    logging.debug('Corrections for {}: aperture:{}, extrinction: {}'.format(filter,ap_corr,float(gal_ext)))
     # Apply extinctions and apcorrs
     for a in range(len(mag)):
         if mag[a]!=99.999 and mag[a]!=66.666:
@@ -388,11 +374,6 @@ ra, dec = wcs_ref.wcs_pix2sky(cat['X'], cat['Y'], 1)
 cat.insert(2,'RA',ra)
 cat.insert(3,'DEC',dec)
 
-# Calculate apparent magnitude of absolute mag limit (-6)
-distance = userinput['DISTANCE']
-
-dist_mod = 5 * np.log10(distance) + 25.
-m_apparent = dist_mod - 6.
 
 
 # Save the final catalog to file
@@ -404,17 +385,9 @@ cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filt
 cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
            sep='\t', float_format = '%.3f')
 print ''
-nr_of_clusters = len (cat['# filters'])
+nr_of_clusters = len (cat['X'])
 print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
 logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
-
-nr_of_4filters = len(cat[cat['# filters']==4])
-print '\t \t Nr of 4 filter detections: {}'.format(nr_of_4filters)
-logging.info('Nr of 4 filter detections: {}'.format(nr_of_4filters))
-
-nr_of_5filters = len(cat[cat['# filters']==5])
-print '\t \t Nr of 5 filter detections: {}'.format(nr_of_5filters)
-logging.info('Nr of 5 filter detections: {}'.format(nr_of_5filters))
 
 
 #------------------------------------------------------------------------------
