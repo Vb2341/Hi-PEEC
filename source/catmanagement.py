@@ -21,6 +21,7 @@ from __future__ import division#,print_function
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # sys utils
 import os, glob
@@ -170,10 +171,21 @@ def BVI_detection(cat, filters, userinput):
     Output:
         cat (PANDAS DATAFRAME) - dataframe containing the cluster data
     """
+    if 'F438W' in filters:
+        B = 'F438W'
+    else:
+        B = 'F435W'
+
+    if 'F555W' in filters:
+        V = 'F555W'
+    else:
+        V = 'F606W'
+
+    I = 'F814W'
     maxerr = userinput['MAGERR']
 
-    BVImags = ['Mag ' + s for s in filters if s in ['F336W','F555W','F814W']]
-    BVIerrs = ['Err ' + s for s in filters if s in ['F336W','F555W','F814W']]
+    BVImags = ['Mag ' + s for s in filters if s in [B,V,I]]
+    BVIerrs = ['Err ' + s for s in filters if s in [B,V,I]]
     logging.debug('selecting sources detected in {}'.format(BVImags))
     try:
         selection = ((cat[BVIerrs[0]]<=maxerr)
@@ -251,6 +263,7 @@ def apply_corrs(userinput, cat):
     """
     # Assign the galactic extinction for the five instrument/filter combinations
     # Read in extinction file as array (a vs u means acs/uvis)
+    target_dir = userinput['OUTDIR']
     extfile = target_dir + '/init/Hi-PEEC_galactic_extinction.tab'
     extinctions = pd.read_table(extfile, header=[0,1],index_col=0, sep=r"\s*")
 
@@ -316,7 +329,7 @@ def apply_corrs(userinput, cat):
 
     return cat
 
-def insert_WCS(cat):
+def insert_WCS(userinput, cat):
     """
     Function for inserting WCS coordinates into the catalog
     Inputs:
@@ -324,6 +337,8 @@ def insert_WCS(cat):
     Output:
         cat (PANDAS DATAFRAME) - dataframe containing the cluster data
     """
+    target_dir = userinput['OUTDIR']
+    imlist = glob.glob(target_dir + '/img/*_sci.fits')
 
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]

@@ -50,8 +50,16 @@ LOWLIM      -2                                  # 16 lower limit for avg apertur
 
 #Catalog cleanup parameters
 #---------------------------------------------------------------------------------------
-MAGERR      0.35                                # 17 Level for photometry error cut (MAG)
+MAGERR      1                                   # 17 Level for photometry error cut (MAG)
 #---------------------------------------------------------------------------------------
+
+
+#Manually added clusters
+#---------------------------------------------------------------------------------------
+DO_CLUSTERS True                                # 18 Do photometry on manually added clusters(True/False)
+CLUSTERS    catalog.coo                         # 18 Catalog for the manually added clusters
+#---------------------------------------------------------------------------------------
+
 
 #Cleanup
 #---------------------------------------------------------------------------------------

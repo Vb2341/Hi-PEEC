@@ -35,7 +35,7 @@ import datetime
 
 import logging
 #If there is a problem, set level=logging.DEBUG to get additional information in the log file
-logging.basicConfig(filename='Hi-PEEC.log', filemode='w', level=logging.INFO,
+logging.basicConfig(filename='Hi-PEEC.log', filemode='w', level=logging.DEBUG,
                     format='%(levelname)s: %(filename)s:%(lineno)s:%(funcName)s() - %(asctime)s: %(message)s',
                     datefmt='%I:%M:%S')
 
