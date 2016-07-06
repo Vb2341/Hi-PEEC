@@ -94,6 +94,24 @@ def get_filter(image):
 
     return filter
 
+def ACS_zeropoint(image):
+    """
+    Calculates the zeropoint for ACS images from the header info and returns it
+    @params
+    image (STR)     - path to image file
+
+    @returns
+    zeropoint (FLOAT)    - magnitude zeropoint for frame
+    """
+    logging.debug('Calculating zeropoint for {}'.format(image))
+
+    PHOTFLAM = pyfits.getheader(image)['PHOTFLAM']
+    PHOTPLAM = pyfits.getheader(image)['PHOTPLAM']
+
+    ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
+
+    return ABMAG_ZEROPOINT
+
 def extraction(userinputs):
     #Set up required variables
     target_dir = userinputs['OUTDIR']
@@ -209,20 +227,24 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         zp = float(zp[0])
         #If that cannot be done there was no match.
     except IndexError:
-        logging.critical('No matching zeropoint found. Quitting.')
-        logging.debug('No zeropoint match found for filter {} with instrument {}'\
-                      .format(filter,inst))
-        logging.debug('Available filters in zeropoint file : {} for instrument {}'\
-                      .format(filter_zp, inst_zp))
-        sys.exit('No zeropoint was found for filter: {}'.format(filter))
+        if inst == 'acs':
+            logging.debug('Zeropoint not found in file, passing to ACS calculation')
+            zp = ACS_zeropoint(image)
+        else:
+            logging.critical('No matching zeropoint found. Quitting.')
+            logging.debug('No zeropoint match found for filter {} with instrument {}'\
+                          .format(filter,inst))
+            logging.debug('Available filters in zeropoint file : {} for instrument {}'\
+                          .format(filter_zp, inst_zp))
+            sys.exit('No zeropoint was found for filter: {}'.format(filter))
 
     logging.debug('Zeropoint from file: {}'.format(zp))
     # Remove output file if it already exists
     filemanagement.remove_if_exists(output)
 
+
     # Run photometry
     #--------------------------------------------------------------------------
-
     # Set up IRAF params:
     iraf.datapars.epadu = exptime
 
@@ -296,6 +318,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
         mag[out_fov] = 66.666
         merr[out_fov] = 66.666
+        msky[out_fov] = 66.666
 
         # Undetected sources, those with negative flux or fluxes so small that mag err
         # is INDEF
@@ -304,8 +327,10 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
         mag[neg_flux] = 99.999
         merr[neg_flux] = 99.999
+        msky[neg_flux] = 99.999
 
         merr[tiny_flux] = 99.999
+        msky[tiny_flux] = 99.999
 
         logging.debug('Nr of undetected sources: {}'.format(len(tiny_flux)+len(neg_flux)))
         # Save results to new file

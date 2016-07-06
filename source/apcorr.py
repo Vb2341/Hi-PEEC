@@ -29,6 +29,7 @@ import sys
 import string
 import ast
 import logging
+import warnings
 
 #astronomy utils
 import pyfits
@@ -107,15 +108,21 @@ def calculation(userinputs):
         # Limit range of aperture corrections allowed to go into average
         lim = (apcor < uplim) & (apcor > lowlim)
         apcor_lim = apcor[lim]
-        try:
-            apcor_avg = np.mean(apcor[lim])
-            apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
-        except RuntimeWarning:
-            loggin.critical('No stars in the apcorr star list after filtering. Quitting')
-            loggin.debug('Check {} and the aperture correction requirements'\
-                         .format(userinputs['STARS']))
-            sys.exit('No stars left after filtering. Check {} and the aperture \
-                correction requirements'.format(userinputs['STARS']))
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            try:
+                apcor_avg = np.mean(apcor[lim])
+                apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
+            except RuntimeWarning:
+                logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
+                logging.debug('Check {} and the aperture correction requirements'\
+                             .format(userinputs['STARS']))
+                print ''
+                print '\tWARNING:'
+                print '\tNo stars in the apcorr star list for {} after filtering. Check {} and the aperture correction requirements'\
+                    .format(filter, userinputs['STARS'])
+                apcor_avg = 0
+                apcor_err = 0
 
         #Save these results to file
         with open(apcorrfile,'a') as file:
