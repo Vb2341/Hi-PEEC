@@ -48,7 +48,7 @@ import pywcs
 sys.path.insert(0, './source/')
 import filemanagement
 import extraction
-import apcorr
+import catmanagement
 #------------------------------------------------------------------------------
 
 
@@ -208,7 +208,7 @@ if userinput['APCORR']:
     print ''
     print 'Calculating aperture corrections'
 
-    apcorr.calculation(userinput)
+    catmanagement.apcorr_calc(userinput)
 
 
 #------------------------------------------------------------------------------
@@ -246,133 +246,28 @@ for a in range(len(phot_cats)):
     cat[maglabels[a]] = mag
     cat[errlabels[a]] = err
 
+
 # Remove sources that are not detected in BVI
 #------------------------------------------------------------------------------
-maxerr = userinput['MAGERR']
-BVImags = ['Mag ' + s for s in filters if s in ['F336W','F555W','F814W']]
-BVIerrs = ['Err ' + s for s in filters if s in ['F336W','F555W','F814W']]
-logging.debug('selecting sources detected in {}'.format(BVImags))
-try:
-    selection = ((cat[BVIerrs[0]]<=maxerr)
-             & (cat[BVIerrs[1]]<=maxerr)
-             & (cat[BVIerrs[2]]<=maxerr))
-except IndexError:
-    logging.critical('F336W,F555W, and F814W are not all present. Unable to do selection')
-    logging.debug('Filters present:{}'.format(filters))
-    sys.exit('F336W,F555W, and F814W are not all present. Unable to do selection. Shutting down')
-
-len_before = len(cat['X'])
-cat = cat.drop(cat[~selection].index)
-len_after = len(cat['X'])
-
-logging.info('Removed all sources not detected in BVI filters.\
-Nr of sources removed {}'.format(len_before-len_after))
-
+print '\t Selecting sources detected in B,V and I'
+cat = catmanagement.BVI_detection(cat, filters,userinput)
 
 
 # Remove duplicate sources
 #------------------------------------------------------------------------------
 print '\t Removing duplicate sources'
-
-# Set tolerance to use
-tolerance = 0.5
-
-#Create boolean array
-for_removal = np.zeros(len(cat['X']), dtype = bool)
-
-prelength =len(cat['X'])
-
-x = cat['X'].as_matrix()
-y = cat['Y'].as_matrix()
-
-#Loop over sources to check if there are duplicates
-for k in np.arange(len(x - 1)):
-
-    # Calculate distance between kth object and subsequent objects
-    d = np.sqrt((x[k] - x[k + 1:])**2 + (y[k] - y[k + 1:])**2)
-
-    # If any of the distances calculated is less than the tolerance, change removal status
-    if (d < tolerance).any():
-        for_removal[k] = True
-
-#Drop the sources found in the loop
-cat = cat.drop(cat[for_removal].index)
-postlength = len(cat['X'])
-
-nr_of_duplicates = prelength - postlength
-
-print '\t\t Duplicates removed: {}'.format(nr_of_duplicates)
-logging.info('{} duplicate sources removed'.format(nr_of_duplicates))
+cat = catmanagement.remove_duplicates(cat)
 
 
 
 # Apply Extinction and aperture corrections
 #------------------------------------------------------------------------------
 print '\t Apply extinction and aperture corrections'
-# Assign the galactic extinction for the five instrument/filter combinations
-# Read in extinction file as array (a vs u means acs/uvis)
-extfile = target_dir + '/init/Hi-PEEC_galactic_extinction.tab'
-extinctions = pd.read_table(extfile, header=[0,1],index_col=0, sep=r"\s*")
-
-# Pick extinctions for our target only
-target = userinput['TARGET'].lower()
-
-extinctions = extinctions.loc[['ngc1614']]
-
-imlist = glob.glob(target_dir + '/img/*_sci.fits')
+cat = catmanagement.apply_corrs(userinput,cat)
 
 
-# Load apcorrs
-logging.info('Loading apcorrs from file')
-apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt',
-                              unpack=True, usecols=(0, 1, 2))
-
-for image in imlist:
-
-    # Get filter from filename
-    filter = extraction.get_filter(image)
-
-    # Get instrument from header
-    instr = pyfits.getheader(image)['INSTRUME']
-    instr = instr.lower()
-
-    # Select the correct extinction
-    gal_ext = extinctions[filter.lower()][instr]
-
-    # Select the appropriate mag column
-    mag = cat['Mag ' + filter].as_matrix()
-    err = cat['Err ' + filter].as_matrix()
-
-    # Select the apcor and apcor error corresponding to the current filter
-    ap_corr = apc[apf == filter]
-    ap_err = ape[apf == filter]
-
-    logging.debug('Corrections for {}: aperture:{}, extrinction: {}'.format(filter,ap_corr,float(gal_ext)))
-    # Apply extinctions and apcorrs
-    for a in range(len(mag)):
-        if mag[a]!=99.999 and mag[a]!=66.666:
-            mag[a] = mag[a] + ap_corr - gal_ext
-            err[a] = np.sqrt(err[a]**2 + ap_err**2)
-
-    # Insert the new mags into the catalog
-    cat['Mag ' + filter] = mag
-    cat['Err ' + filter] = err
-
-
-# Convert xy coordinates into RA Dec of reference filter
-ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
-
-# Get header from reference image using pyfits
-header_ref = pyfits.getheader(ref_image)
-
-# Get wcs solution from reference image header
-logging.info('Get and insert WCS coordinates for each source')
-wcs_ref = pywcs.WCS(header_ref)
-
-# Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
-ra, dec = wcs_ref.wcs_pix2sky(cat['X'], cat['Y'], 1)
-cat.insert(2,'RA',ra)
-cat.insert(3,'DEC',dec)
+# Insert WCS coordinates into catalog
+cat = catmanagement.insert_WCS(cat)
 
 
 
