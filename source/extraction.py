@@ -157,6 +157,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     output      (STR)   - full path to the final catalog file
     """
     logging.info('Running photometry function on {}'.format(image))
+    logging.info('Using {}px apertures'.format(apertures))
 
     #set directory
     target_dir = userinputs['OUTDIR']

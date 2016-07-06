@@ -78,19 +78,19 @@ def calculation(userinputs):
         # Do required photometry
         #-----------------------------------------------------------------------
 
-        # 20 px aperture photometry
-        photometry_file_20 = phot_dir + '20px_apcorr_' + filter + '.mag'
+        # Large (20px) aperture photometry
+        photometry_file_large = phot_dir + 'large_apcorr_' + filter + '.mag'
 
-        apcorr_cat_20 = extraction.photometry(userinputs, image,
-                            userinputs['STARS'], photometry_file_20,
+        apcorr_cat_large = extraction.photometry(userinputs, image,
+                            userinputs['STARS'], photometry_file_large,
                             '20.0', annulus=21.0, dannulus=1.0)
 
-        # 4px aperture photometry
-        photometry_file_4 = phot_dir + '4px_apcorr_' + filter + '.mag'
+        # Small (user selected) aperture photometry
+        photometry_file_small = phot_dir + 'small_apcorr_' + filter + '.mag'
 
-        apcorr_cat_4 = extraction.photometry(userinputs, image,
-                            userinputs['STARS'], photometry_file_4,
-                            '4.0')
+        apcorr_cat_small = extraction.photometry(userinputs, image,
+                            userinputs['STARS'], photometry_file_small,
+                            str(userinputs['AP_RAD']))
 
 
         #-----------------------------------------------------------------------
@@ -98,11 +98,11 @@ def calculation(userinputs):
         #-----------------------------------------------------------------------
 
         # Load the photometry
-        x, y, mag_4 = np.loadtxt(apcorr_cat_4, unpack=True, usecols=(0,1,2))
-        mag_20 = np.loadtxt(apcorr_cat_20, unpack=True, usecols=(2,))
+        x, y, mag_small = np.loadtxt(apcorr_cat_small, unpack=True, usecols=(0,1,2))
+        mag_large = np.loadtxt(apcorr_cat_large, unpack=True, usecols=(2,))
 
         # Calculate aperture corrections
-        apcor = mag_20 - mag_4
+        apcor = mag_large - mag_small
 
         # Limit range of aperture corrections allowed to go into average
         lim = (apcor < uplim) & (apcor > lowlim)

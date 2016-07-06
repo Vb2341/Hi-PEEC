@@ -12,8 +12,8 @@ DISTANCE    67.8                                # 2 distance to target in units 
 #Folder setup
 #---------------------------------------------------------------------------------------
 SETUP       True                                # 3 set up directories etc? (True/False)
-DATA        /home/user/Hi-PEEC/Data/NGC1614     # 4 Directory where image files are located
-OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory. If same as current 
+DATA        /home/user/Hi-PEEC/Data/NGC1614/Leonardo     # 4 Directory where image files are located
+OUTDIR      /home/user/Hi-PEEC/Output/NGC1614/Leonardo   # 5 Output directory. If same as current 
 						# working dir put False. (directory/False)
                               
 #---------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory. If same as
 #Extraction parameters
 #---------------------------------------------------------------------------------------
 EXTRACT     True                                # 6 Run source extraction   (True/False)
-IMAGE       F555W_hipeec_WFC3_UVIS_drc_sci.fits # 7 Sextractor input reference image
+IMAGE       ngc1614_uvis_f555w_sci.fits         # 7 Sextractor input reference image
 REF_FILTER  F555W				# 8 Filter to be used as reference
 #---------------------------------------------------------------------------------------
 
