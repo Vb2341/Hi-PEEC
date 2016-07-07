@@ -194,7 +194,7 @@ def BVI_detection(cat, filters, userinput):
     except IndexError:
         logging.critical('F336W,F555W, and F814W are not all present. Unable to do selection')
         logging.debug('Filters present:{}'.format(filters))
-        filemanagement.shutdown('F336W,F555W, and F814W are not all present. Unable to do selection. Shutting down')
+        filemanagement.shutdown('F336W,F555W, and F814W are not all present. Unable to do selection. Shutting down',userinput)
 
     len_before = len(cat['X'])
     cat = cat.drop(cat[~selection].index)

@@ -63,10 +63,9 @@ def remove_if_exists(filename):
             return 1
     else:
         return 0
-def shutdown(message):
+def shutdown(message,userinput):
     # Always move the log file to the output dir before shutting down
-    os.chdir(pydir)
-    cmd = 'mv Hi-PEEC.log ' + target_dir + '/Hi-PEEC.log'
+    cmd = 'mv '+ userinput['PYDIR']+'/Hi-PEEC.log ' + userinput['OUTDIR'] + '/Hi-PEEC.log'
     os.system(cmd)
 
     sys.exit(message)
@@ -101,7 +100,7 @@ def setup(userinputs,pydir):
     if os.path.exists(pydir + '/init') == False:
         logging.critical('No init directory found. Shutting down process')
         logging.debug('Unable to locate {}'.format(pydir + '/init'))
-        filemanagement.shutdown('No init/ directory. Please create.')
+        filemanagement.shutdown('No init/ directory. Please create.',userinputs)
 
     #Remove it if it exists to make sure that the config files are properly updated
     check = remove_if_exists(target_dir+'/init')
@@ -173,7 +172,7 @@ def setup(userinputs,pydir):
         logging.critical('No coordinate file for isolated stars found!')
         logging.debug('{} not found in {}'.format(userinputs['STARS'],target_dir + '/init'))
         filemanagement.shutdown("Coordinate file for isolated stars (keyword 'STARS')\
-         was not found in the /init/ directory. Please add this file")
+         was not found in the /init/ directory. Please add this file",userinputs)
     else:
         logging.info('Copying {} to photometry folder'.format(userinputs['STARS']))
         destination = target_dir + '/photometry/' + userinputs['STARS']

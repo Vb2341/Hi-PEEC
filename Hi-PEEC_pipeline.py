@@ -75,7 +75,7 @@ if os.path.exists(pydir + '/' + infile) == False:
     print 'File ', infile, ' could not be found in ', pydir
     logging.critical('Could not find input file, quit process')
     logging.debug('Looking for {} '.format(pydir + '/' + infile))
-    filemanagement.shutdown('Quitting now')
+    sys.exit('Quitting now')
 
 #Read in file
 raw_userinput = np.genfromtxt(infile, dtype=None)
@@ -97,7 +97,7 @@ if userinput['OUTDIR']==False:
     logging.info('No output directory specified, using {}'.format(target_dir))
 else:
     target_dir = userinput['OUTDIR']
-
+userinput['PYDIR'] = os.getcwd()
 
 # Print contents of input file
 print 'Inputs that will be used by the pipeline:'
@@ -302,7 +302,7 @@ if userinput['DO_CLUSTERS']:
                          .format(inputlist_path))
         logging.debug('The specified cluster file {} does not exist.'\
                          .format(inputlist_path))
-        filemanagement.shutdown('The specified cluster file does not exist. Quitting.')
+        filemanagement.shutdown('The specified cluster file does not exist. Quitting.',userinput)
 
     # Select images
     ref_image = target_dir + '/img/' + userinput['IMAGE']
@@ -419,7 +419,5 @@ if userinput['DO_CLUSTERS']:
 # FINAL CLEANUPS
 #------------------------------------------------------------------------------
 
-# Move the log file to the outdirectory
-os.chdir(pydir)
-cmd = 'mv Hi-PEEC.log ' + target_dir + '/Hi-PEEC.log'
-os.system(cmd)
+
+filemanagement.shutdown('All operations performed. Shutting down.',userinput)
