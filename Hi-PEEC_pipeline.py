@@ -75,7 +75,7 @@ if os.path.exists(pydir + '/' + infile) == False:
     print 'File ', infile, ' could not be found in ', pydir
     logging.critical('Could not find input file, quit process')
     logging.debug('Looking for {} '.format(pydir + '/' + infile))
-    sys.exit('quitting now...')
+    filemanagement.shutdown('Quitting now')
 
 #Read in file
 raw_userinput = np.genfromtxt(infile, dtype=None)
@@ -302,7 +302,7 @@ if userinput['DO_CLUSTERS']:
                          .format(inputlist_path))
         logging.debug('The specified cluster file {} does not exist.'\
                          .format(inputlist_path))
-        sys.exit('The specified cluster file does not exist. Quitting.')
+        filemanagement.shutdown('The specified cluster file does not exist. Quitting.')
 
     # Select images
     ref_image = target_dir + '/img/' + userinput['IMAGE']

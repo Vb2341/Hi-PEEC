@@ -125,7 +125,7 @@ def extraction(userinputs):
         print 'File ' + seximage + ' could not be found in ' + target_dir + '/img/'
         logging.critical(' Could not find {}. Quitting'.format(seximage))
         logging.debug('Looking for {} but unable to locate'.format(target_dir + '/img/' + seximage))
-        sys.exit('Quitting now...')
+        filemanagement.shutdown('Quitting now...')
 
     # Run sextractor
     logging.info('Start sextractor')
@@ -187,7 +187,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         image = glob.glob(target_dir + '/img/' + image)
         if len(image)==0:
             logging.critical('No {} image found'.format(image))
-            sys.exit('Selected image does not exist')
+            filemanagement.shutdown('Selected image does not exist')
         else:
             image = image[0]
     logging.debug('Using image: {}'.format(image))
@@ -236,7 +236,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
                           .format(filter,inst))
             logging.debug('Available filters in zeropoint file : {} for instrument {}'\
                           .format(filter_zp, inst_zp))
-            sys.exit('No zeropoint was found for filter: {}'.format(filter))
+            filemanagement.shutdown('No zeropoint was found for filter: {}'.format(filter))
 
     logging.debug('Zeropoint from file: {}'.format(zp))
     # Remove output file if it already exists
