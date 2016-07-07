@@ -92,9 +92,6 @@ def setup(userinputs,pydir):
         os.makedirs(target_dir + '/plots')
         logging.info('Creating plots directory')
 
-    if os.path.exists(target_dir + '/img') == False:
-        os.makedirs(target_dir + '/img')
-        logging.info('Creating img directory')
 
     #check that the init directory exists
     if os.path.exists(pydir + '/init') == False:
@@ -113,43 +110,6 @@ def setup(userinputs,pydir):
     destination = target_dir+'/init'
     logging.info('Copying new config files from {}'.format(source))
     shutil.copytree(source, destination)
-
-
-
-    # Only move images to /img directory if they aren't there already
-    im_check = glob.glob(target_dir + '/img/*.fits')
-
-    if len(im_check) == 0:
-        logging.info('No fitsfiles found in /img/. Copying from data.')
-        #Move all the fits files
-        print '\t Copying fits files ...'
-
-        imlist = glob.glob(userinputs['DATA'] + '/*.fits')
-        logging.debug('fitsfiles copied: {}'.format(imlist))
-
-        #print progressbar
-        i=0
-        l = len(imlist)
-        printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
-
-        for impath in imlist:
-            #set path parameters
-            source = impath
-            image = impath.split('/')[-1]
-            destination = target_dir + '/img/' + image
-
-            #copy the file
-            shutil.copy(source, destination)
-
-            #Update the progressbar
-            i = i+1
-            printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
-
-            # Update header of each image slightly
-            pf = pyfits.open(destination, mode='update')
-            pf[0].header['BUNIT']= 'ELECTRONS/S'
-            pf.close()
-        print('')
 
     #Copy the Source Extraction parameter files.
     logging.info('Moving source extraction paramfiles to s_extraction')

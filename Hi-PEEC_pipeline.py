@@ -183,7 +183,7 @@ if userinput['DO_PHOT']:
     print ''
     print '\tDoing photometry on full image set:'
 
-    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+    imagelist = glob.glob(userinput['DATA'] + '/*sci*.fits')
 
     #print progressbar
     i=0
@@ -305,8 +305,8 @@ if userinput['DO_CLUSTERS']:
         filemanagement.shutdown('The specified cluster file does not exist. Quitting.',userinput)
 
     # Select images
-    ref_image = target_dir + '/img/' + userinput['IMAGE']
-    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
+    ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
+    imagelist = glob.glob(userinput['DATA']+'/*sci*.fits')
 
 
     # Recenter the input coordinates

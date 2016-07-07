@@ -67,7 +67,7 @@ def apcorr_calc(userinputs):
     phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
     #Get the list of images
-    imagelist = glob.glob(userinputs['OUTDIR'] +'/img/*sci*.fits')
+    imagelist = glob.glob(userinputs['DATA'] + '/*sci*.fits')
 
     #Clear old apcorr file
     apcorrfile = userinputs['OUTDIR'] + '/photometry/avg_aperture_correction.txt'
@@ -272,7 +272,7 @@ def apply_corrs(userinput, cat):
 
     extinctions = extinctions.loc[['ngc1614']]
 
-    imlist = glob.glob(target_dir + '/img/*_sci.fits')
+    imlist = glob.glob(userinput['DATA'] + '/*sci*.fits')
 
 
     # Load apcorrs
@@ -322,7 +322,7 @@ def insert_WCS(userinput, cat):
         cat (PANDAS DATAFRAME) - dataframe containing the cluster data
     """
     target_dir = userinput['OUTDIR']
-    imlist = glob.glob(target_dir + '/img/*sci*.fits')
+    imlist = glob.glob(userinput['DATA'] + '/*sci*.fits')
 
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]

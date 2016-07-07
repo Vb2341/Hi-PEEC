@@ -121,17 +121,17 @@ def extraction(userinputs):
     print 'Executing SExtractor on user selected image : ', seximage
 
     # Verify that file exists
-    if os.path.exists(target_dir + '/img/' + seximage) == False:
-        print 'File ' + seximage + ' could not be found in ' + target_dir + '/img/'
+    if os.path.exists(userinputs['DATA'] + '/' + seximage) == False:
+        print 'File ' + seximage + ' could not be found in ' + userinputs['DATA']
         logging.critical(' Could not find {}. Quitting'.format(seximage))
-        logging.debug('Looking for {} but unable to locate'.format(target_dir + '/img/' + seximage))
+        logging.debug('Looking for {} but unable to locate'.format(userinputs['DATA'] + '/' + seximage))
         filemanagement.shutdown('Quitting now...',userinputs)
 
     # Run sextractor
     logging.info('Start sextractor')
     os.chdir(target_dir + '/s_extraction')
     logging.debug('Changed dir to {}'.format(os.getcwd()))
-    command = 'sex ' + target_dir + '/img/' + seximage + '  -c R2_wl_aa.config'
+    command = 'sex ' + userinputs['DATA'] + '/' + seximage + '  -c R2_wl_aa.config'
     os.system(command)
     os.chdir(target_dir)
     logging.debug('Changed working directory back to {}'.format(target_dir))
@@ -183,8 +183,8 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     #Update passed names  to be full paths if they are not
 
     if len(image.split('/'))==1:
-        logging.info('Looking for {} in img dir.'.format(image))
-        image = glob.glob(target_dir + '/img/' + image)
+        logging.info('Looking for {} in {}.'.format(image,userinputs['DATA']))
+        image = glob.glob(userinputs['DATA'] + '/' + image)
         if len(image)==0:
             logging.critical('No {} image found'.format(image))
             filemanagement.shutdown('Selected image does not exist',userinputs)
