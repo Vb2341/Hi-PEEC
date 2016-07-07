@@ -206,7 +206,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
 
     #Load zeropoints
-    inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
+    inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/Hi-PEEC_zeropoints.tab', unpack=True, dtype='str')
 
     # Get filter from header
     filter = get_filter(image)
