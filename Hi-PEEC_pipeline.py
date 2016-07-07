@@ -131,7 +131,7 @@ if userinput['EXTRACT']:
     print ''
     extraction_cat = extraction.extraction(userinput)
 else:
-    target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
+    extraction_cat = target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
 
 #------------------------------------------------------------------------------
