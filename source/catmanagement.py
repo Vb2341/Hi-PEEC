@@ -322,7 +322,7 @@ def insert_WCS(userinput, cat):
         cat (PANDAS DATAFRAME) - dataframe containing the cluster data
     """
     target_dir = userinput['OUTDIR']
-    imlist = glob.glob(target_dir + '/img/*_sci.fits')
+    imlist = glob.glob(target_dir + '/img/*sci*.fits')
 
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
