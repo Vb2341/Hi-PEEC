@@ -311,22 +311,6 @@ def apply_corrs(userinput, cat):
         cat['Mag ' + filter] = mag
         cat['Err ' + filter] = err
 
-
-    # Convert xy coordinates into RA Dec of reference filter
-    ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
-
-    # Get header from reference image using pyfits
-    header_ref = pyfits.getheader(ref_image)
-
-    # Get wcs solution from reference image header
-    logging.info('Get and insert WCS coordinates for each source')
-    wcs_ref = pywcs.WCS(header_ref)
-
-    # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
-    ra, dec = wcs_ref.wcs_pix2sky(cat['X'], cat['Y'], 1)
-    cat.insert(2,'RA',ra)
-    cat.insert(3,'DEC',dec)
-
     return cat
 
 def insert_WCS(userinput, cat):

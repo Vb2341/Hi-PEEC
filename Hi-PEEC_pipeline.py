@@ -214,76 +214,206 @@ if userinput['APCORR']:
 #------------------------------------------------------------------------------
 # Create the final photometric catalogs
 #------------------------------------------------------------------------------
-logging.info('CREATING FINAL CATALOG')
-print ''
-print 'Creating final photometric catalog'
+if userinput['CREATE_CAT']:
+    logging.info('CREATING FINAL CATALOG')
+    print ''
+    print 'Creating final photometric catalog'
 
-# Get a list of the photometric catalogs & sort them by wavelength
-phot_cats = glob.glob(target_dir + '/photometry/short_phot*')
-phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
-logging.debug('List of photometric catalogs to include in final:{}'.format(phot_cats))
+    # Get a list of the photometric catalogs & sort them by wavelength
+    phot_cats = glob.glob(target_dir + '/photometry/short_phot*')
+    phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
+    logging.debug('List of photometric catalogs to include in final:{}'.format(phot_cats))
 
-# Get a list of filters from the filenames
-filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+    # Get a list of filters from the filenames
+    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
 
-# Create the catalog dataframe
-cat = pd.DataFrame()
+    # Create the catalog dataframe
+    cat = pd.DataFrame()
 
-# Get the x y coordinates which are the same for all the filters.
-x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
-cat['X'] = x
-cat['Y'] = y
+    # Get the x y coordinates which are the same for all the filters.
+    x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
+    cat['X'] = x
+    cat['Y'] = y
 
-# Generate column labels
-maglabels = ['Mag ' + s for s in filters]
-errlabels = ['Err ' + s for s in filters]
+    # Generate column labels
+    maglabels = ['Mag ' + s for s in filters]
+    errlabels = ['Err ' + s for s in filters]
 
-# Construct the photometric catalog
-logging.info('Assembling the catalog')
-for a in range(len(phot_cats)):
-    # Read in data, append to final catalog dataframe.
-    mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
-    cat[maglabels[a]] = mag
-    cat[errlabels[a]] = err
+    # Construct the photometric catalog
+    logging.info('Assembling the catalog')
+    for a in range(len(phot_cats)):
+        # Read in data, append to final catalog dataframe.
+        mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
+        cat[maglabels[a]] = mag
+        cat[errlabels[a]] = err
 
 
-# Remove sources that are not detected in BVI
+    # Remove sources that are not detected in BVI
+    #------------------------------------------------------------------------------
+    print '\t Selecting sources detected in B,V and I'
+    cat = catmanagement.BVI_detection(cat, filters,userinput)
+
+
+    # Remove duplicate sources
+    #------------------------------------------------------------------------------
+    print '\t Removing duplicate sources'
+    cat = catmanagement.remove_duplicates(cat)
+
+
+    # Apply Extinction and aperture corrections
+    #------------------------------------------------------------------------------
+    print '\t Apply extinction and aperture corrections'
+    cat = catmanagement.apply_corrs(userinput,cat)
+
+
+    # Insert WCS coordinates into catalog
+    #------------------------------------------------------------------------------
+    cat = catmanagement.insert_WCS(userinput,cat)
+
+
+
+    # Save the final catalog to file
+    #------------------------------------------------------------------------------
+    print '\t Save the final catalog to file'
+    date = datetime.datetime.now().strftime ("%Y-%m-%d")
+
+    cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
+    cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
+               sep='\t', float_format = '%.3f')
+    print ''
+    nr_of_clusters = len (cat['X'])
+    print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
+    logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
+
+
+
 #------------------------------------------------------------------------------
-print '\t Selecting sources detected in B,V and I'
-cat = catmanagement.BVI_detection(cat, filters,userinput)
-
-
-# Remove duplicate sources
+# MAKE CATALOGS FOR ADDED CLUSTERS
 #------------------------------------------------------------------------------
-print '\t Removing duplicate sources'
-cat = catmanagement.remove_duplicates(cat)
+if userinput['DO_CLUSTERS']:
+    print ''
+    print 'Running pipeline for manually added clusters'
+    logging.info('RUNNING MANUALLY ADDED CLUSTER STEP')
+
+    inputlist_path = target_dir + '/init/' + userinput['CLUSTERS']
+
+    if os.path.exists(inputlist_path)==False:
+        logging.critical('The specified cluster file {} does not exist.'\
+                         .format(inputlist_path))
+        logging.debug('The specified cluster file {} does not exist.'\
+                         .format(inputlist_path))
+        sys.exit('The specified cluster file does not exist. Quitting.')
+
+    # Select images
+    ref_image = target_dir + '/img/' + userinput['IMAGE']
+    imagelist = glob.glob(target_dir+'/img/*sci*.fits')
 
 
+    # Recenter the input coordinates
+    #------------------------------------------------------------------------------
+    print '\t Centering coordinates'
+    extraction.photometry(userinput, userinput['IMAGE'],
+                                   inputlist_path, 'manual_centers.mag',
+                                   str(userinput['AP_RAD']))
 
-# Apply Extinction and aperture corrections
-#------------------------------------------------------------------------------
-print '\t Apply extinction and aperture corrections'
-cat = catmanagement.apply_corrs(userinput,cat)
+    center_catalog = target_dir + '/photometry/manual_centers.mag'
+
+    manualcat = target_dir + '/photometry/fullcat_ref_center.coo'
+    filemanagement.remove_if_exists(manualcat)
+
+    iraf.txdump(center_catalog,'XCENTER,YCENTER','yes',Stdout=manualcat)
 
 
-# Insert WCS coordinates into catalog
-cat = catmanagement.insert_WCS(cat)
+    # Do photometry on the added cluster coordinates
+    #------------------------------------------------------------------------------
+    print '\t Doing photometry for manually added clusters on full image set:'
 
 
+    #print progressbar
+    i=0
+    l = len(imagelist)
+    filemanagement.printProgress(i, l)
 
-# Save the final catalog to file
-#------------------------------------------------------------------------------
-print '\t Save the final catalog to file'
-date = datetime.datetime.now().strftime ("%Y-%m-%d")
+    for image in imagelist:
+        filter = extraction.get_filter(image)
 
-cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
-cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
-           sep='\t', float_format = '%.3f')
-print ''
-nr_of_clusters = len (cat['X'])
-print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
-logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
+        outputfile = target_dir + '/photometry/manual_'+filter+'.mag'
+        extraction.photometry(userinput, image, manualcat, outputfile, str(userinput['AP_RAD']))
+        i=i+1
+        filemanagement.printProgress(i, l)
 
+
+    #------------------------------------------------------------------------------
+    # Create the final photometric catalogs
+    #------------------------------------------------------------------------------
+    logging.info('CREATING MANUAL CATALOG')
+    print ''
+    print '\t Creating final photometric catalog for manually added clusters'
+
+    # Get a list of the photometric catalogs & sort them by wavelength
+    phot_cats = glob.glob(target_dir + '/photometry/short_manual*')
+    phot_cats = sorted(phot_cats, key=lambda file: (os.path.basename(file)))
+    logging.debug('List of photometric catalogs to include in manual cat:{}'.format(phot_cats))
+
+    # Get a list of filters from the filenames
+    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+
+    # Create the catalog dataframe
+    mancat = pd.DataFrame()
+
+    # Get the x y coordinates which are the same for all the filters.
+    x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
+    mancat['X'] = x
+    mancat['Y'] = y
+
+    # Generate column labels
+    maglabels = ['Mag ' + s for s in filters]
+    errlabels = ['Err ' + s for s in filters]
+
+    # Construct the photometric catalog
+    logging.info('Assembling the catalog')
+    for a in range(len(phot_cats)):
+        # Read in data, append to final catalog dataframe.
+        mag, err = np.loadtxt(phot_cats[a], unpack=True, usecols=(2,3))
+        mancat[maglabels[a]] = mag
+        mancat[errlabels[a]] = err
+
+
+    # Remove sources that are not detected in BVI
+    #------------------------------------------------------------------------------
+    print '\t Selecting sources detected in B,V and I'
+    mancat = catmanagement.BVI_detection(mancat, filters,userinput)
+
+
+    # Remove duplicate sources
+    #------------------------------------------------------------------------------
+    print '\t Removing duplicate sources'
+    mancat = catmanagement.remove_duplicates(mancat)
+
+
+    # Apply Extinction and aperture corrections
+    #------------------------------------------------------------------------------
+    print '\t Apply extinction and aperture corrections'
+    mancat = catmanagement.apply_corrs(userinput,mancat)
+
+
+    # Insert WCS coordinates into catalog
+    #------------------------------------------------------------------------------
+    mancat = catmanagement.insert_WCS(userinput,mancat)
+
+
+    # Save the final catalog to file
+    #------------------------------------------------------------------------------
+    print '\t Save the final catalog to file'
+    date = datetime.datetime.now().strftime ("%Y-%m-%d")
+
+    mancat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
+    mancat.to_csv(target_dir+'/manual_cat_'+userinput['TARGET'] + '_' + date + '.cat',
+               sep='\t', float_format = '%.3f')
+    print ''
+    nr_of_clusters = len (mancat['X'])
+    print '\t Number of clusters in the final manual catalogue: {}'.format(nr_of_clusters)
+    logging.info('Number of clusters in the final manual catalogue: {}'.format(nr_of_clusters))
 
 #------------------------------------------------------------------------------
 # FINAL CLEANUPS
