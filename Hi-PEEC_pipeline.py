@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-#Title: Hi-PEEC Python Pipeline
+#Title: Hi-PEEC Python Pipeline v1.0
 #Author:        Axel Runnholm
 #Creation date: 2016-06-16
 #Description:   This is the cluster extraction pipeline for the Hi-PEEC project
@@ -57,8 +57,8 @@ import catmanagement
 #==============================================================================
 os.system('clear')
 print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
-print 'Version 0.1'
-print 'Last changed: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
+print 'Version 1.0'
+print 'Last updated: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
 logging.info('Run started')
 
