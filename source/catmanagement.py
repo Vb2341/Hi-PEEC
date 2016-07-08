@@ -59,10 +59,6 @@ def apcorr_calc(userinputs):
     lowlim = userinputs['LOWLIM']
     uplim = userinputs['UPLIM']
 
-    # Set aperture sizes
-    small_ap = 4
-    big_ap = 20
-
     #Set directory of the photometry as variable since it is target for the function
     phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
