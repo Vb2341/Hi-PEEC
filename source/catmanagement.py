@@ -325,7 +325,7 @@ def insert_WCS(userinput, cat):
     imlist = glob.glob(userinput['DATA'] + '/*sci*.fits')
 
     # Convert xy coordinates into RA Dec of reference filter
-    ref_image = [image for image in imlist if userinput['REF_FILTER'] in image][0]
+    ref_image = [image for image in imlist if userinput['REF_FILTER'].lower() in image.lower()][0]
 
     # Get header from reference image using pyfits
     header_ref = pyfits.getheader(ref_image)
