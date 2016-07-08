@@ -27,6 +27,7 @@ import shutil
 import sys
 import string
 import ast
+import logging
 
 #astronomy utils
 import pyfits
@@ -62,6 +63,13 @@ def remove_if_exists(filename):
             return 1
     else:
         return 0
+def shutdown(message,userinput):
+    # Always move the log file to the output dir before shutting down
+    cmd = 'mv '+ userinput['PYDIR']+'/Hi-PEEC.log ' + userinput['OUTDIR'] + '/Hi-PEEC.log'
+    os.system(cmd)
+
+    sys.exit(message)
+
 
 def setup(userinputs,pydir):
 
@@ -74,67 +82,38 @@ def setup(userinputs,pydir):
     #Create required directories
     if os.path.exists(target_dir + '/s_extraction') == False:
         os.makedirs(target_dir + '/s_extraction')
+        logging.info('Creating s_extraction directory')
 
     if os.path.exists(target_dir + '/photometry') == False:
         os.makedirs(target_dir + '/photometry')
+        logging.info('Creating photometry directory')
 
     if os.path.exists(target_dir + '/plots') == False:
         os.makedirs(target_dir + '/plots')
-
-    if os.path.exists(target_dir + '/img') == False:
-        os.makedirs(target_dir + '/img')
+        logging.info('Creating plots directory')
 
 
     #check that the init directory exists
     if os.path.exists(pydir + '/init') == False:
-        print 'No init/ directory. Please create.'
-        sys.exit()
+        logging.critical('No init directory found. Shutting down process')
+        logging.debug('Unable to locate {}'.format(pydir + '/init'))
+        filemanagement.shutdown('No init/ directory. Please create.',userinputs)
 
     #Remove it if it exists to make sure that the config files are properly updated
-    remove_if_exists(target_dir+'/init')
+    check = remove_if_exists(target_dir+'/init')
+    if check == 1:
+        logging.info('Removed old config files')
 
     print 'Copying files'
     #copy init directory to target directory
     source =  pydir+'/init'
     destination = target_dir+'/init'
+    logging.info('Copying new config files from {}'.format(source))
     shutil.copytree(source, destination)
 
-
-
-    # Only move images to /img directory if they aren't there already
-    im_check = glob.glob(target_dir + '/img/*.fits')
-
-    if len(im_check) == 0:
-        #Move all the fits files
-        print '\t Copying fits files ...'
-
-        imlist = glob.glob(userinputs['DATA'] + '/*.fits')
-
-        #print progressbar
-        i=0
-        l = len(imlist)
-        printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
-
-        for impath in imlist:
-            #set path parameters
-            source = impath
-            image = impath.split('/')[-1]
-            destination = target_dir + '/img/' + image
-
-            #copy the file
-            shutil.copy(source, destination)
-
-            #Update the progressbar
-            i = i+1
-            printProgress(i, l, prefix = '\t Progress:', suffix = 'Complete', barLength = 50)
-
-            # Update header of each image slightly
-            pf = pyfits.open(destination, mode='update')
-            pf[0].header['BUNIT']= 'ELECTRONS/S'
-            pf.close()
-        print('')
-
     #Copy the Source Extraction parameter files.
+    logging.info('Moving source extraction paramfiles to s_extraction')
+
     source =  pydir + '/init/output.param'
     destination = target_dir+ '/s_extraction/output.param'
     shutil.copyfile(source, destination)
@@ -150,9 +129,12 @@ def setup(userinputs,pydir):
     #copy the file for star coordinates to photometry folder
     source = pydir + '/init/' + userinputs['STARS']
     if os.path.exists(source) == False:
-        sys.exit("Coordinate file for isolated stars (keyword 'STARS')\
-         was not found in the /init/ directory. Please add this file")
+        logging.critical('No coordinate file for isolated stars found!')
+        logging.debug('{} not found in {}'.format(userinputs['STARS'],target_dir + '/init'))
+        filemanagement.shutdown("Coordinate file for isolated stars (keyword 'STARS')\
+         was not found in the /init/ directory. Please add this file",userinputs)
     else:
+        logging.info('Copying {} to photometry folder'.format(userinputs['STARS']))
         destination = target_dir + '/photometry/' + userinputs['STARS']
         shutil.copyfile(source, destination)
 

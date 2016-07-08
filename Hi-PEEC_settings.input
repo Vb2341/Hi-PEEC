@@ -14,14 +14,13 @@ DISTANCE    67.8                                # 2 distance to target in units 
 SETUP       True                                # 3 set up directories etc? (True/False)
 DATA        /home/user/Hi-PEEC/Data/NGC1614     # 4 Directory where image files are located
 OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory. If same as current 
-						# working dir put False. (directory/False)
-                              
+						#   working dir put False. (directory/False)
 #---------------------------------------------------------------------------------------
 
 
 #Extraction parameters
 #---------------------------------------------------------------------------------------
-EXTRACT     True                                # 6 Run source extraction   (True/False)
+EXTRACT     False                               # 6 Run source extraction   (True/False)
 IMAGE       F555W_hipeec_WFC3_UVIS_drc_sci.fits # 7 Sextractor input reference image
 REF_FILTER  F555W				# 8 Filter to be used as reference
 #---------------------------------------------------------------------------------------
@@ -40,32 +39,31 @@ D_ANNULUS   1                                   # 12 Skyannulus width (pixels)
 #Aperture correction parameters:
 #---------------------------------------------------------------------------------------
 APCORR      True                                # 13 Run aperture correction calculation step
-STARS	    foregroundstars.coo                 # 14 File containing isolated star coords (xy) 
-						# needs to be located in the /init/ directory
+STARS	    foregroundstars.coo                 # 14 File containing isolated star coords (x y) 
+						#    (needs to be located in the /init/ directory)
 UPLIM       -0.1                                # 15 upper limit for avg aperture correction 
                                                 #    (may need to be less negative for more distant galaxies)
 LOWLIM      -2                                  # 16 lower limit for avg aperture correction
                                                 #    (may need to be more negative for very nearby galaxies)
 #---------------------------------------------------------------------------------------
 
-#Catalog cleanup parameters
+#Catalog parameters
 #---------------------------------------------------------------------------------------
-MAGERR      1                                   # 17 Level for photometry error cut (MAG)
+CREATE_CAT  True                                # 17 Whether to compile the results into a catalog (True/False)
+MAGERR      1                                   # 18 Level for photometry error cut (MAG)
 #---------------------------------------------------------------------------------------
+
+
+#Manually added clusters
+#---------------------------------------------------------------------------------------
+DO_CLUSTERS True                                # 19 Do photometry on manually added clusters(True/False)
+CLUSTERS    manualclusters.coo                  # 20 Catalog for the manually added clusters
+                                                #    (Should be placed in the /init/ directory)
+#---------------------------------------------------------------------------------------
+
 
 #Cleanup
 #---------------------------------------------------------------------------------------
 CLEAN      True                                 # 17 Run the directory cleaning step(True/False)
 #---------------------------------------------------------------------------------------
 
-
-
-#no                                  # 7 (yes/no)      step 3
-#1.4                                 # 8 concentration index value
-#no                                  # 9 (yes/no)      step 4 
-#-0.5                                # 10 upper limit for avg aperture correction (may need to be less negative for more distant galaxies)
-#-1.2                                # 11 lower limit for avg aperture correction (may need to be more negative for very nearby galaxies)
-#no                                  # 12 (yes/no)      step 5 
-#no                                  # 13 (yes/no)      step 6 
-#additional.coo                      # 14 additional clusters coordinate file (place in target directory)
-#none                                # 15 smoothed image for additional cluster centering (should be located in /img directory)

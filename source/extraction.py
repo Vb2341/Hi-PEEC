@@ -27,6 +27,7 @@ import shutil
 import sys
 import string
 import ast
+import logging
 
 #astronomy utils
 import pyfits
@@ -83,37 +84,67 @@ def get_filter(image):
     @returns
     filter (STR)    - string with filter name
     """
+    logging.debug('Retrieving filter for {}'.format(image))
     try:
         filter = pyfits.getheader(image)['FILTER']
     except KeyError:
+        logging.debug('No FILTER key found, trying FILTER2')
         #The 814 image has the filter information under the keyword FILTER2:
         filter = pyfits.getheader(image)['FILTER2']
+
     return filter
+
+def ACS_zeropoint(image):
+    """
+    Calculates the zeropoint for ACS images from the header info and returns it
+    @params
+    image (STR)     - path to image file
+
+    @returns
+    zeropoint (FLOAT)    - magnitude zeropoint for frame
+    """
+    logging.debug('Calculating zeropoint for {}'.format(image))
+
+    PHOTFLAM = pyfits.getheader(image)['PHOTFLAM']
+    PHOTPLAM = pyfits.getheader(image)['PHOTPLAM']
+
+    ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
+
+    return ABMAG_ZEROPOINT
 
 def extraction(userinputs):
     #Set up required variables
     target_dir = userinputs['OUTDIR']
     seximage = userinputs['IMAGE']
+    logging.info('Running sextractor on {}'.format(userinputs['IMAGE']))
 
     print 'Executing SExtractor on user selected image : ', seximage
 
     # Verify that file exists
-    if os.path.exists(target_dir + '/img/' + seximage) == False:
-        print 'File ' + seximage + ' could not be found in ' + target_dir + '/img/'
-        sys.exit('Quitting now...')
+    if os.path.exists(userinputs['DATA'] + '/' + seximage) == False:
+        print 'File ' + seximage + ' could not be found in ' + userinputs['DATA']
+        logging.critical(' Could not find {}. Quitting'.format(seximage))
+        logging.debug('Looking for {} but unable to locate'.format(userinputs['DATA'] + '/' + seximage))
+        filemanagement.shutdown('Quitting now...',userinputs)
 
     # Run sextractor
+    logging.info('Start sextractor')
     os.chdir(target_dir + '/s_extraction')
-    command = 'sex ' + target_dir + '/img/' + seximage + '  -c R2_wl_aa.config'
+    logging.debug('Changed dir to {}'.format(os.getcwd()))
+    command = 'sex ' + userinputs['DATA'] + '/' + seximage + '  -c R2_wl_aa.config'
     os.system(command)
     os.chdir(target_dir)
+    logging.debug('Changed working directory back to {}'.format(target_dir))
 
     # Read in results and make regions file of objects sextracted
+    logging.info('Read in Sextractor catalog')
     xx, yy = np.loadtxt(target_dir + '/s_extraction/R2_wl_dpop_detarea.cat', unpack=True,
                         skiprows=5, usecols=(0,1))
 
     outputfile = target_dir + '/s_extraction/catalog_ds9_sextractor.reg'
 
+    logging.info('Writing region file from source extractor data')
+    logging.debug('Sextractor file: {}'.format(target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'))
     with open(outputfile, 'w') as file:
         file.write('global color=blue width=5 font="helvetica 15 normal roman" highlite=1 \n')
         file.write('image\n')
@@ -143,30 +174,39 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     @Returns
     output      (STR)   - full path to the final catalog file
     """
+    logging.info('Running photometry function on {}'.format(image))
+    logging.info('Using {}px apertures'.format(apertures))
+
     #set directory
     target_dir = userinputs['OUTDIR']
 
     #Update passed names  to be full paths if they are not
 
     if len(image.split('/'))==1:
-        image = glob.glob(target_dir + '/img/' + image)
+        logging.info('Looking for {} in {}.'.format(image,userinputs['DATA']))
+        image = glob.glob(userinputs['DATA'] + '/' + image)
         if len(image)==0:
-            sys.exit('Selected image does not exist')
+            logging.critical('No {} image found'.format(image))
+            filemanagement.shutdown('Selected image does not exist',userinputs)
         else:
             image = image[0]
+    logging.debug('Using image: {}'.format(image))
 
     if len(catalog.split('/'))==1:
         catalog = target_dir + '/init/' + catalog
+        logging.debug('Input catalog: {}'.format(catalog))
 
     if len(outputname.split('/'))==1:
         output = target_dir + '/photometry/' + outputname
+        logging.debug('Output name: {}'.format(output))
     else:
         output = outputname
         outputname = outputname.split('/')[-1]
+        logging.debug('Output name: {}'.format(output))
 
 
     #Load zeropoints
-    inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/legus_zeropoints.tab', unpack=True, dtype='str')
+    inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/Hi-PEEC_zeropoints.tab', unpack=True, dtype='str')
 
     # Get filter from header
     filter = get_filter(image)
@@ -174,7 +214,9 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
     # Set the necessary variables for photometry on the reference image
     exptime = pyfits.getheader(image)['EXPTIME']
+    logging.debug('Exposure time from header: {}'.format(exptime))
     inst = pyfits.getheader(image)['INSTRUME']
+    logging.debug('Intrument from header: {}'.format(inst))
     inst = inst.lower()
 
     match = (inst_zp == inst) & (filter_zp == filter.lower())
@@ -185,14 +227,24 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         zp = float(zp[0])
         #If that cannot be done there was no match.
     except IndexError:
-        sys.exit('No zeropoint was found for filter: {}'.format(filter))
+        if inst == 'acs':
+            logging.debug('Zeropoint not found in file, passing to ACS calculation')
+            zp = ACS_zeropoint(image)
+        else:
+            logging.critical('No matching zeropoint found. Quitting.')
+            logging.debug('No zeropoint match found for filter {} with instrument {}'\
+                          .format(filter,inst))
+            logging.debug('Available filters in zeropoint file : {} for instrument {}'\
+                          .format(filter_zp, inst_zp))
+            filemanagement.shutdown('No zeropoint was found for filter: {}'.format(filter),userinputs)
 
+    logging.debug('Zeropoint from file: {}'.format(zp))
     # Remove output file if it already exists
     filemanagement.remove_if_exists(output)
 
+
     # Run photometry
     #--------------------------------------------------------------------------
-
     # Set up IRAF params:
     iraf.datapars.epadu = exptime
 
@@ -201,12 +253,16 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     # Select the annulus depending on whether it is overwritten in the function call or not
     if annulus == '':
         iraf.fitskypars.annulus = userinputs['ANNULUS']
+        logging.info('Using annulus from inputfile ({}px)'.format(userinputs['ANNULUS']))
     else:
         iraf.fitskypars.annulus = annulus
+        logging.info('Using user specified annulus ({}px)'.format(annulus))
     if dannulus == '':
         iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
+        logging.info('Using annulus width from inputfile ({}px)'.format(userinputs['D_ANNULUS']))
     else:
         iraf.fitskypars.dannulu = dannulus
+        logging.info('Using user specified annulus width ({}px)'.format(dannulus))
 
     iraf.photpars.apertures = apertures
     iraf.photpars.zmag = zp
@@ -221,6 +277,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     #--------------------------------------------------------------------------
 
     naper = len(apertures.split(','))
+    logging.debug('Number of apertures used {}'.format(naper))
 
     #final output filename
     fullcat_mag_short = target_dir + '/photometry/short_' + outputname
@@ -234,8 +291,6 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         # Replace INDEFS:
         cmd = 'sed -i.bak "s/INDEF/99.999/g" ' + fullcat_mag_short
         os.system(cmd)
-
-        dumpfile = target_dir+'/photometry/dumptest.mag'
 
         # Remove .bak files to prevent confusion
         bak_fullcat = fullcat_mag_short + '.bak'
@@ -259,9 +314,11 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         flux = flux.astype(float)
 
         out_fov = (flux == 0.)
+        logging.debug('Number of sources outside FOV: {}'.format(len(out_fov)))
 
         mag[out_fov] = 66.666
         merr[out_fov] = 66.666
+        msky[out_fov] = 66.666
 
         # Undetected sources, those with negative flux or fluxes so small that mag err
         # is INDEF
@@ -270,9 +327,12 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
         mag[neg_flux] = 99.999
         merr[neg_flux] = 99.999
+        msky[neg_flux] = 99.999
 
         merr[tiny_flux] = 99.999
+        msky[tiny_flux] = 99.999
 
+        logging.debug('Nr of undetected sources: {}'.format(len(tiny_flux)+len(neg_flux)))
         # Save results to new file
         x = x.astype(float)
         y = y.astype(float)
@@ -292,9 +352,9 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
 
 def growth_curve(userinputs, catalog):
-
-    #Load the photometry results from the catalog (that is returned by the phot
-    #function)
+    logging.info('Running growth curve analysis on {}'.format(catalog))
+    # Load the photometry results from the catalog (that is returned by the phot
+    # function)
     aper_st, flux_st = np.loadtxt(catalog, unpack=True, usecols=(0,3))
 
     #Growth curve is only done on the ref image so we get the filter from userinp.
@@ -307,6 +367,7 @@ def growth_curve(userinputs, catalog):
 
     # Calculate the number of stars, make sure it is an integer
     nstar = int(len(aper_st)/naper)
+    logging.info('Number of stars used: {}'.format(nstar))
     aper_ind = naper - 1
 
     for k in range(nstar):
@@ -314,7 +375,6 @@ def growth_curve(userinputs, catalog):
         for i in range(naper):
 
             ratio_st[i + k*naper] = flux_st[i + k*naper]/flux_st[aper_ind + k*naper]
-
 
 
     # Find median ratio at each aperture between all the stars and all the clusters
@@ -326,6 +386,7 @@ def growth_curve(userinputs, catalog):
 
 
     # Plot growth curves
+    logging.info('Creating Growth curve plots')
     fig = plt.figure(figsize = (7,7))
 
     aper_x = np.arange(naper) + 1
