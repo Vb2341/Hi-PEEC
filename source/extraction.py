@@ -88,10 +88,15 @@ def get_filter(image):
     try:
         filter = pyfits.getheader(image)['FILTER']
     except KeyError:
-        logging.debug('No FILTER key found, trying FILTER2')
+        logging.debug('No FILTER key found, trying FILTER1')
         #The 814 image has the filter information under the keyword FILTER2:
-        filter = pyfits.getheader(image)['FILTER2']
-
+        filter = pyfits.getheader(image)['FILTER1']
+        if filter[0].lower()!='f':
+            logging.debug('FILTER1 does not match a filter designation, trying FILTER2')
+            filter = pyfits.getheader(image)['FILTER2']
+            if filter[0].lower()!='f':
+                logging.critical('No valid filter could be found in {}'.format(image))
+                filemanagement.shutdown('No valid filter found in the header on {}'.format(image))
     return filter
 
 def calc_aperture(userinput,image):

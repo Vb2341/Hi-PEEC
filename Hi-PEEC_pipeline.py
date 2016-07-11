@@ -229,7 +229,7 @@ if userinput['CREATE_CAT']:
     logging.debug('List of photometric catalogs to include in final:{}'.format(phot_cats))
 
     # Get a list of filters from the filenames
-    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+    filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
 
     # Create the catalog dataframe
     cat = pd.DataFrame()
@@ -364,7 +364,7 @@ if userinput['DO_CLUSTERS']:
     logging.debug('List of photometric catalogs to include in manual cat:{}'.format(phot_cats))
 
     # Get a list of filters from the filenames
-    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+    filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
 
     # Create the catalog dataframe
     mancat = pd.DataFrame()
