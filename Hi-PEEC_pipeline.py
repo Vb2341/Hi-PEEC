@@ -289,7 +289,8 @@ if userinput['CREATE_CAT']:
     print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
     logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
 
-
+    # Create a region file from this catalog
+    extraction.create_regfile(userinput, cat['X'], cat['Y'], 'final_catalog.reg')
 
 #------------------------------------------------------------------------------
 # MAKE CATALOGS FOR ADDED CLUSTERS
