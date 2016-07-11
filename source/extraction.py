@@ -113,6 +113,13 @@ def ACS_zeropoint(image):
     return ABMAG_ZEROPOINT
 
 def extraction(userinputs):
+    """Function for doing source extraction on an image using the Sextractor software
+    Inputs:
+        userinputs (DICT) - the dictionary of userinputs which contains the name of
+                            the image which SExtractor is used on.
+    Outputs:
+        catalog dir (STR) - The full path to the source catalog created by sextractor
+    """
     #Set up required variables
     target_dir = userinputs['OUTDIR']
     seximage = userinputs['IMAGE']
@@ -161,18 +168,18 @@ def extraction(userinputs):
 
 def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
     """Function for performing IRAF photometry
-    @Params:
-    userinputs  (dict)  - dictionary with results from the user input file.
-    image       (STR)   - fitsfile we want to do photometry on
-    catalog     (STR)   - input coordinates where we want to do photometry
-    outputname  (STR)   - name of the file where we store the measured results
-    apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
-    annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
-                          user inputs is used
-    dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
+    Inputs:
+        userinputs  (dict)  - dictionary with results from the user input file.
+        image       (STR)   - fitsfile we want to do photometry on
+        catalog     (STR)   - input coordinates where we want to do photometry
+        outputname  (STR)   - name of the file where we store the measured results
+        apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
+        annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
+                              user inputs is used
+        dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
 
-    @Returns
-    output      (STR)   - full path to the final catalog file
+    Outputs:
+        output      (STR)   - full path to the final catalog file
     """
     logging.info('Running photometry function on {}'.format(image))
     logging.info('Using {}px apertures'.format(apertures))
@@ -352,6 +359,15 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
 
 def growth_curve(userinputs, catalog):
+    """Function for calculating and plotting a growth curve based on input photometry
+    Inputs:
+        userinputs  (dict)  - dictionary with results from the user input file.
+        catalog (str)       - Full path to growth curve catalog (20 apertures)
+
+    Outputs:
+        plot_growth_curve (plot) - creates a plot of the growth curve of the selected
+                                    stars. Plot is saved in /plots/
+    """
     logging.info('Running growth curve analysis on {}'.format(catalog))
     # Load the photometry results from the catalog (that is returned by the phot
     # function)
