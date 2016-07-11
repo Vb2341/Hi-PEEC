@@ -149,6 +149,33 @@ def ACS_zeropoint(image):
 
     return ABMAG_ZEROPOINT
 
+
+def create_regfile(userinput, x, y, filename, color='blue', width=2):
+    """Creates a ds9 readable regionfile
+    Inputs:
+        x (vector)      - list of x coords
+        y (vector)      - list of y coords
+        filename (str)  - name of regionfile to be created
+    Outputs:
+        none
+    Effects:
+        Creates a reg file with the given name inside /s_extraction
+    """
+    target_dir = userinput['OUTDIR']
+    outputfile = target_dir + '/s_extraction/{}'.format(filename)
+
+    logging.info('Writing region file {}'.format(filename))
+
+    with open(outputfile, 'w') as file:
+        file.write('global color={} width={} font="helvetica 15 normal roman" highlite=1 \n'\
+                   .format(color,width))
+        file.write('image\n')
+
+        for i in range(len(x)):
+            newline = 'circle(' + str(x[i]) + ',' + str(y[i]) +  ',7) \n'
+            file.write(newline)
+
+
 def extraction(userinputs):
     """Function for doing source extraction on an image using the Sextractor software
     Inputs:
