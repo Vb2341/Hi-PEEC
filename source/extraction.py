@@ -100,24 +100,36 @@ def calc_aperture(userinput,image):
         userinput (dict) - dictionary of user inputs containing refimage path and
                             science aperture.
         image (str)      - path to the image you want to calculate the aperture for.
+    Outputs:
+        aperture (str)   - string containing the calculated
     """
     # Step 1: Calculate the physical size of the aperture
-    ref_image = userinput['DATA'] + userinput['IMAGE']
+    ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
     logging.debug('Calculating aperture for {}'.format(image))
 
     ref_scale = pyfits.getheader(ref_image)['D001SCAL']
-    ref_scale = np.ceil(ref_scale)
-    ref_ap = userinput['APERTURE']
+    # Round to 1 significant digit
+    ref_scale = round(ref_scale, -int(np.floor(np.log10(abs(ref_scale)))))
 
+
+    ref_ap = userinput['AP_RAD']
     ref_apsize = ref_ap * float(ref_scale)
-    logging.debug('Calculated aperture size for reference: {}arcsec'.format{ref_apsize})
+
+    logging.debug('Calculated aperture size for reference: {}arcsec'.format(ref_apsize))
 
     # Step 2: Calculate required aperture
-    im_scale = np.ceil(pyfits.getheader(image)['D001SCAL'])
+    im_scale = pyfits.getheader(image)['D001SCAL']
+
+
+    # Round to 1 significant digit
+    im_scale = round(im_scale, -int(np.floor(np.log10(abs(im_scale)))))
 
     aperture = ref_apsize / float(im_scale)
 
     logging.debug('Calculated aperture for image: {}px'.format(aperture))
+
+    return str(aperture)
+
 
 def ACS_zeropoint(image):
     """
