@@ -194,7 +194,11 @@ if userinput['DO_PHOT']:
         filter = extraction.get_filter(image)
 
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
-        extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
+        # calculate proper aperture to use
+        ap = extraction.calc_aperture(userinput, image)
+
+        #do photometry
+        extraction.photometry(userinput, image, fullcat, outputfile, ap)
         i=i+1
         filemanagement.printProgress(i, l)
 
@@ -337,8 +341,11 @@ if userinput['DO_CLUSTERS']:
     for image in imagelist:
         filter = extraction.get_filter(image)
 
+        # Calculate appropriate aperture
+        ap = extraction.calc_aperture(userinput,image)
+
         outputfile = target_dir + '/photometry/manual_'+filter+'.mag'
-        extraction.photometry(userinput, image, manualcat, outputfile, str(userinput['AP_RAD']))
+        extraction.photometry(userinput, image, manualcat, outputfile, ap)
         i=i+1
         filemanagement.printProgress(i, l)
 
