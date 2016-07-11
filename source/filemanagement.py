@@ -54,16 +54,39 @@ def printProgress (iteration, total, prefix = '\t Progress', suffix = 'Complete'
         print("\n")
 
 def remove_if_exists(filename):
+    """Function for simplifying removal of files
+    Inputs:
+        filename (str) - full path to file you wish to remove
+    Outputs:
+        none
+    Effects:
+        removes the specified file of directory
+    """
     if os.path.exists(filename) == True:
         try:
+            logging.debug('Removing file: {}'.format(filename))
             os.remove(filename)
             return 1
         except OSError:
+            logging.debug('Removing directory: {}'.format(filename))
             shutil.rmtree(filename)
             return 1
     else:
+        logging.debug('Could not remove file: {}'.format(filename))
         return 0
+
+
 def shutdown(message,userinput):
+    """Function for safely shutting down the pipeline
+    Inputs:
+        message (str) - shutdown message to diplay to user
+        userinputs (dict) - userinput dictionary that contains necessary paths
+    Outputs:
+        none
+    Effects:
+        Moves the log file from the pipeline directory to the target directory
+        Shuts down the pipeline via sys.exit
+    """
     # Always move the log file to the output dir before shutting down
     cmd = 'mv '+ userinput['PYDIR']+'/Hi-PEEC.log ' + userinput['OUTDIR'] + '/Hi-PEEC.log'
     os.system(cmd)
@@ -71,8 +94,16 @@ def shutdown(message,userinput):
     sys.exit(message)
 
 
-def setup(userinputs,pydir):
-
+def setup(userinputs):
+    """Function for setting up required folder structure and copying files
+    Inputs:
+        userinputs (dict) - Dictionary containing the relevant paths
+    Outputs:
+        none
+    Effects:
+        Creates the target dir and moves the necessary config files there
+    """
+    pydir = userinputs['PYDIR']
     target_dir = userinputs['OUTDIR']
 
     print ''

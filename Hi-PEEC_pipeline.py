@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-#Title: Hi-PEEC Python Pipeline v1.0
+#Title: Hi-PEEC Python Pipeline v1.1
 #Author:        Axel Runnholm
 #Creation date: 2016-06-16
 #Description:   This is the cluster extraction pipeline for the Hi-PEEC project
@@ -57,7 +57,7 @@ import catmanagement
 #==============================================================================
 os.system('clear')
 print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
-print 'Version 1.0'
+print 'Version 1.1'
 print 'Last updated: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
 logging.info('Run started')
@@ -118,7 +118,7 @@ print '_______________________________________________________________________'
 #------------------------------------------------------------------------------
 if userinput['SETUP']:
     logging.info('RUNNING SETUP')
-    filemanagement.setup(userinput, pydir)
+    filemanagement.setup(userinput)
 
 
 #------------------------------------------------------------------------------
@@ -194,7 +194,11 @@ if userinput['DO_PHOT']:
         filter = extraction.get_filter(image)
 
         outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
-        extraction.photometry(userinput, image, fullcat, outputfile, str(userinput['AP_RAD']))
+        # calculate proper aperture to use
+        ap = extraction.calc_aperture(userinput, image)
+
+        #do photometry
+        extraction.photometry(userinput, image, fullcat, outputfile, ap)
         i=i+1
         filemanagement.printProgress(i, l)
 
@@ -225,7 +229,7 @@ if userinput['CREATE_CAT']:
     logging.debug('List of photometric catalogs to include in final:{}'.format(phot_cats))
 
     # Get a list of filters from the filenames
-    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+    filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
 
     # Create the catalog dataframe
     cat = pd.DataFrame()
@@ -285,7 +289,8 @@ if userinput['CREATE_CAT']:
     print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
     logging.info('Number of clusters in the final catalogue: {}'.format(nr_of_clusters))
 
-
+    # Create a region file from this catalog
+    extraction.create_regfile(userinput, cat['X'], cat['Y'], 'final_catalog.reg')
 
 #------------------------------------------------------------------------------
 # MAKE CATALOGS FOR ADDED CLUSTERS
@@ -337,8 +342,11 @@ if userinput['DO_CLUSTERS']:
     for image in imagelist:
         filter = extraction.get_filter(image)
 
+        # Calculate appropriate aperture
+        ap = extraction.calc_aperture(userinput,image)
+
         outputfile = target_dir + '/photometry/manual_'+filter+'.mag'
-        extraction.photometry(userinput, image, manualcat, outputfile, str(userinput['AP_RAD']))
+        extraction.photometry(userinput, image, manualcat, outputfile, ap)
         i=i+1
         filemanagement.printProgress(i, l)
 
@@ -356,7 +364,7 @@ if userinput['DO_CLUSTERS']:
     logging.debug('List of photometric catalogs to include in manual cat:{}'.format(phot_cats))
 
     # Get a list of filters from the filenames
-    filters = [os.path.basename(i).split('_')[-1][0:5] for i in phot_cats]
+    filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
 
     # Create the catalog dataframe
     mancat = pd.DataFrame()

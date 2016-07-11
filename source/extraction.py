@@ -88,11 +88,53 @@ def get_filter(image):
     try:
         filter = pyfits.getheader(image)['FILTER']
     except KeyError:
-        logging.debug('No FILTER key found, trying FILTER2')
+        logging.debug('No FILTER key found, trying FILTER1')
         #The 814 image has the filter information under the keyword FILTER2:
-        filter = pyfits.getheader(image)['FILTER2']
-
+        filter = pyfits.getheader(image)['FILTER1']
+        if filter[0].lower()!='f':
+            logging.debug('FILTER1 does not match a filter designation, trying FILTER2')
+            filter = pyfits.getheader(image)['FILTER2']
+            if filter[0].lower()!='f':
+                logging.critical('No valid filter could be found in {}'.format(image))
+                filemanagement.shutdown('No valid filter found in the header on {}'.format(image))
     return filter
+
+def calc_aperture(userinput,image):
+    """Function for calculating the appropriate aperture size based on pixel scale
+    Inputs:
+        userinput (dict) - dictionary of user inputs containing refimage path and
+                            science aperture.
+        image (str)      - path to the image you want to calculate the aperture for.
+    Outputs:
+        aperture (str)   - string containing the calculated
+    """
+    # Step 1: Calculate the physical size of the aperture
+    ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
+    logging.debug('Calculating aperture for {}'.format(image))
+
+    ref_scale = pyfits.getheader(ref_image)['D001SCAL']
+    # Round to 1 significant digit
+    ref_scale = round(ref_scale, -int(np.floor(np.log10(abs(ref_scale)))))
+
+
+    ref_ap = userinput['AP_RAD']
+    ref_apsize = ref_ap * float(ref_scale)
+
+    logging.debug('Calculated aperture size for reference: {}arcsec'.format(ref_apsize))
+
+    # Step 2: Calculate required aperture
+    im_scale = pyfits.getheader(image)['D001SCAL']
+
+
+    # Round to 1 significant digit
+    im_scale = round(im_scale, -int(np.floor(np.log10(abs(im_scale)))))
+
+    aperture = ref_apsize / float(im_scale)
+
+    logging.debug('Calculated aperture for image: {}px'.format(aperture))
+
+    return str(aperture)
+
 
 def ACS_zeropoint(image):
     """
@@ -112,7 +154,41 @@ def ACS_zeropoint(image):
 
     return ABMAG_ZEROPOINT
 
+
+def create_regfile(userinput, x, y, filename, color='blue', width=2):
+    """Creates a ds9 readable regionfile
+    Inputs:
+        x (vector)      - list of x coords
+        y (vector)      - list of y coords
+        filename (str)  - name of regionfile to be created
+    Outputs:
+        none
+    Effects:
+        Creates a reg file with the given name inside /s_extraction
+    """
+    target_dir = userinput['OUTDIR']
+    outputfile = target_dir + '/s_extraction/{}'.format(filename)
+
+    logging.info('Writing region file {}'.format(filename))
+
+    with open(outputfile, 'w') as file:
+        file.write('global color={} width={} font="helvetica 15 normal roman" highlite=1 \n'\
+                   .format(color,width))
+        file.write('image\n')
+
+        for i in range(len(x)):
+            newline = 'circle(' + str(x[i]) + ',' + str(y[i]) +  ',7) \n'
+            file.write(newline)
+
+
 def extraction(userinputs):
+    """Function for doing source extraction on an image using the Sextractor software
+    Inputs:
+        userinputs (DICT) - the dictionary of userinputs which contains the name of
+                            the image which SExtractor is used on.
+    Outputs:
+        catalog dir (STR) - The full path to the source catalog created by sextractor
+    """
     #Set up required variables
     target_dir = userinputs['OUTDIR']
     seximage = userinputs['IMAGE']
@@ -161,18 +237,18 @@ def extraction(userinputs):
 
 def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
     """Function for performing IRAF photometry
-    @Params:
-    userinputs  (dict)  - dictionary with results from the user input file.
-    image       (STR)   - fitsfile we want to do photometry on
-    catalog     (STR)   - input coordinates where we want to do photometry
-    outputname  (STR)   - name of the file where we store the measured results
-    apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
-    annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
-                          user inputs is used
-    dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
+    Inputs:
+        userinputs  (dict)  - dictionary with results from the user input file.
+        image       (STR)   - fitsfile we want to do photometry on
+        catalog     (STR)   - input coordinates where we want to do photometry
+        outputname  (STR)   - name of the file where we store the measured results
+        apertures   (STR)   - what apertures to measure. Should be a string i.e. '1.0,3.0'
+        annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
+                              user inputs is used
+        dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
 
-    @Returns
-    output      (STR)   - full path to the final catalog file
+    Outputs:
+        output      (STR)   - full path to the final catalog file
     """
     logging.info('Running photometry function on {}'.format(image))
     logging.info('Using {}px apertures'.format(apertures))
@@ -352,6 +428,15 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
 
 def growth_curve(userinputs, catalog):
+    """Function for calculating and plotting a growth curve based on input photometry
+    Inputs:
+        userinputs  (dict)  - dictionary with results from the user input file.
+        catalog (str)       - Full path to growth curve catalog (20 apertures)
+
+    Outputs:
+        plot_growth_curve (plot) - creates a plot of the growth curve of the selected
+                                    stars. Plot is saved in /plots/
+    """
     logging.info('Running growth curve analysis on {}'.format(catalog))
     # Load the photometry results from the catalog (that is returned by the phot
     # function)

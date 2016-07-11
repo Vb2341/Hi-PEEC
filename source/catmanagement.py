@@ -59,10 +59,6 @@ def apcorr_calc(userinputs):
     lowlim = userinputs['LOWLIM']
     uplim = userinputs['UPLIM']
 
-    # Set aperture sizes
-    small_ap = 4
-    big_ap = 20
-
     #Set directory of the photometry as variable since it is target for the function
     phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
@@ -91,9 +87,11 @@ def apcorr_calc(userinputs):
         # Small (user selected) aperture photometry
         photometry_file_small = phot_dir + 'small_apcorr_' + filter + '.mag'
 
+        # calculate appropriate aperture to use
+        ap = extraction.calc_aperture(userinputs,image)
         apcorr_cat_small = extraction.photometry(userinputs, image,
                             userinputs['STARS'], photometry_file_small,
-                            str(userinputs['AP_RAD']))
+                            ap)
 
 
         #-----------------------------------------------------------------------
