@@ -49,6 +49,7 @@ sys.path.insert(0, './source/')
 import filemanagement
 import extraction
 import catmanagement
+import linemask
 #------------------------------------------------------------------------------
 
 
@@ -133,7 +134,19 @@ if userinput['EXTRACT']:
 else:
     extraction_cat = target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
+#------------------------------------------------------------------------------
+#Removing edge detections
+#------------------------------------------------------------------------------
+if userinput['REMOVE_EDGE']:
+    logging.info('Removing edge detections')
+    print ''
+    print 'Removing edge detections'
+    print ''
 
+    ref_image =userinput['DATA'] + userinput['IMAGE']
+    regfile = glob.glob(userinput['TARGET'] + '/init/*.reg')[0]
+
+    linemask.remove_edgedetections(extraction_cat, ref_image, regfile)
 #------------------------------------------------------------------------------
 #Create growth curve:
 #------------------------------------------------------------------------------
