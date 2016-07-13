@@ -43,7 +43,7 @@ You download the file by going to ```Source``` in the left sidebar, clicking on 
 
 
 ###How to run the pipeline###
-1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/setup&config))
+1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/config&setup))
 
 3. Check the Hi-PEEC_settings.input file to make sure that the inputs are appropriate.
 
