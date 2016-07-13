@@ -36,8 +36,7 @@ and then try to pull from the repository again.
 
 
 ####Without Git####
-The second way is to simply download the zip file that is contained in the master branch. Note that this is updated less
-often.
+The second way is to simply download the zip file that is contained in the master branch. This archive is kept up-to-date with the latest version released to master.
 
 You download the file by going to ```Source``` in the left sidebar, clicking on the file in the filelist and then clicking ```Raw```
 
