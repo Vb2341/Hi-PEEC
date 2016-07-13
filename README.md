@@ -49,9 +49,10 @@ You download the file by going to ```Source``` in the left sidebar, clicking on 
 2. Run ```python Hi-PEEC_pipeline.py``` in a terminal
 
 ###Dependencies###
+The pipeline has been thus far only been tested on a Linux Kubuntu system, but should work on any unix based OS.
+
 Running the pipeline requires a working installation of Source Extractor and  python 2.7 with the following packages installed:
 
-The pipeline has been thus far only been tested on a Linux Kubuntu system.
 
 ####math, datahandling and plotting utils####
 These are the large and heavy packages 
