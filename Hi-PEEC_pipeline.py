@@ -32,6 +32,7 @@ import sys
 import string
 import ast
 import datetime
+import subprocess
 
 import logging
 #If there is a problem, set level=logging.DEBUG to get additional information in the log file
@@ -144,8 +145,20 @@ if userinput['REMOVE_EDGE']:
     print ''
 
     ref_image =userinput['DATA'] + userinput['IMAGE']
-    regfile = glob.glob(userinput['TARGET'] + '/init/*.reg')[0]
+    regfilename = userinput['TARGET'] + '/init/*.reg'
 
+    if os.path.exists(regfilename) == True:
+        regfile = glob.glob(regfilename)[0]
+    else:
+        print 'There is no .regfile in the init directory'
+        inp = raw_input('Do you wish to create one? (y/n) ')
+        if inp = 'y':
+            cmd = 'ds9' + ref_image
+            subprocess.Popen(cmd, shell=True).wait()
+            if os.path.exists(regfilename) == True:
+                regfile = glob.glob(regfilename)[0]
+            else:
+                filemanagement.shutdown('Still no .reg file detected. Shutting down')
     linemask.remove_edgedetections(extraction_cat, ref_image, regfile)
 #------------------------------------------------------------------------------
 #Create growth curve:
