@@ -113,6 +113,7 @@ def apcorr_calc(userinputs):
             try:
                 apcor_avg = np.mean(apcor[lim])
                 apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
+                logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
             except RuntimeWarning:
                 logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
                 logging.debug('Check {} and the aperture correction requirements'\
