@@ -138,28 +138,39 @@ else:
 #------------------------------------------------------------------------------
 #Removing edge detections
 #------------------------------------------------------------------------------
-if userinput['REMOVE_EDGE']:
+if userinput['MASK_EDGES']:
     logging.info('Removing edge detections')
     print ''
     print 'Removing edge detections'
     print ''
 
-    ref_image =userinput['DATA'] + userinput['IMAGE']
-    regfilename = userinput['TARGET'] + '/init/*.reg'
+    ref_image =userinput['DATA'] + '/' + userinput['IMAGE']
+    regfilename = userinput['OUTDIR'] + '/init/*.reg'
 
-    if os.path.exists(regfilename) == True:
-        regfile = glob.glob(regfilename)[0]
-    else:
+    if not glob.glob(regfilename):
         print 'There is no .regfile in the init directory'
         inp = raw_input('Do you wish to create one? (y/n) ')
-        if inp = 'y':
-            cmd = 'ds9' + ref_image
-            subprocess.Popen(cmd, shell=True).wait()
-            if os.path.exists(regfilename) == True:
-                regfile = glob.glob(regfilename)[0]
+        if inp == 'y':
+            os.chdir(userinput['PYDIR'] + '/init')
+            cmd = 'ds9 ' + ref_image
+            process  = subprocess.Popen(cmd, shell=True)
+            process.wait()
+            os.chdir(userinput['OUTDIR'])
+            if not glob.glob(userinput['PYDIR'] + '/init/*.reg'):
+                filemanagement.shutdown('Still no .reg file detected. Shutting down', userinput)
             else:
-                filemanagement.shutdown('Still no .reg file detected. Shutting down')
+                file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
+                shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
+                regfile = glob.glob(regfilename)[0]
+    else :
+        regfile = glob.glob(regfilename)[0]
+
     linemask.remove_edgedetections(extraction_cat, ref_image, regfile)
+
+    # Create a new reg file
+    # Save region file from extraction catalog
+    xx, yy, fwhm, class_s, mag = np.loadtxt(extraction_cat, skiprows=5, unpack=True)
+    extraction.create_regfile(userinput, xx, yy, 'edges_removed.reg')
 #------------------------------------------------------------------------------
 #Create growth curve:
 #------------------------------------------------------------------------------

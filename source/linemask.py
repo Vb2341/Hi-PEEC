@@ -18,6 +18,7 @@ from __future__ import division#,print_function
 
 import sys
 import scipy as S
+import numpy as np
 import pyfits as PF
 from shutil import copyfile
 
@@ -90,10 +91,10 @@ def create_mask(ref, lines):
 
 	for d in dat :
 		x1, y1, x2, y2 = get_ends(d)
-		print x1, y1, "  ->  ", x2, y2
+		#print x1, y1, "  ->  ", x2, y2
 		edge_near = get_nearedge(x1, y1, x2, y2, Nx, Ny)
 		m, c = get_fn(x1, y1, x2, y2)
-		print "grad=", m, "    intercept=",c
+		#print "grad=", m, "    intercept=",c
 
 		ineq = None
 		if   edge_near == "top"    : ineq = "gt"
@@ -108,6 +109,9 @@ def create_mask(ref, lines):
 		if ineq == "gt": ind = dy > (m*dx + c)
 		else           : ind = dy < (m*dx + c)
 		mask[ind]  = 0.
+
+	PF.writeto('mask.fits', mask, header=head, clobber=True)
+
 	return mask
 
 def remove_edgedetections(catalog, ref, lines):
@@ -127,18 +131,15 @@ def remove_edgedetections(catalog, ref, lines):
 
 	with open(catalog,'r') as f:
 		lines = f.readlines()
-
+	i=0
 	with open(catalog,'w') as f:
 		for line in lines:
-			if line.startswith('#')
+			if line.startswith('#') == True:
 				f.write(line)
 			else:
-				for a in range(len(xx)):
-					x = xx[a]
-					y = yy[a]
-					if mask[x,y] == 1:
-						l = '{}\t{}\t{}\t{}\t{}\n'.format(xx[a], yy[a], fwhm[a], class_s[a], mag[a] )
-						file.write(l)
-
-
-
+				x = xx[i]
+				y = yy[i]
+				if mask[y,x] == 1:
+					l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
+					f.write(l)
+				i+=1
