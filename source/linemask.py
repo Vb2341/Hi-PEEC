@@ -26,6 +26,9 @@ import subprocess
 import shutil
 from shutil import copyfile
 
+sys.path.insert(0, './source/')
+import filemanagement
+
 #-------------------------------------------------------------------------------
 
 
@@ -157,7 +160,7 @@ def mask_edges(userinput,extraction_cat):
         inp = raw_input('Do you wish to create one? (y/n) ')
         if inp == 'y':
             os.chdir(userinput['PYDIR'] + '/init')
-            cmd = 'ds9 ' + ref_image
+            cmd = 'ds9 ' + ref_image + ' -scale log -scale limits -0.1 100 -regions shape line'
             process  = subprocess.Popen(cmd, shell=True)
             process.wait()
             print 'Checking for saved image'
