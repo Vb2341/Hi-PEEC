@@ -4,6 +4,14 @@
 ### What is this repository for? ###
 This repo contains the code for cluster extraction in Hi-PEEC based on the LEGUS cluster extraction script.
 
+### Changelog ###
+
+#### v 1.2 ####
+- Add edge masking
+This version adds the ability to mask the edges of the image in order to prevent false detections from the enhanced noise levels. 
+
+If the option in the settings file is set to True the pipeline looks for a .reg file in the init directory. If it does not find one it will issue a prompt to the user asking if he/she wants to create one. If the answer is yes ds9 is launched with the correct image and linedrawing selected. This then allows the user to draw lines around the region within which they want to detect sources. The user then has to save these regions ( name does not matter as long as it is .reg). The save format has to be ds9 in image coords. If another format is given the pipeline skips this step.
+
 ### How do I get set up? ###
 
 ####Using Git####
