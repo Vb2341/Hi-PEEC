@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-#Title: Hi-PEEC Python Pipeline v1.1
+#Title: Hi-PEEC Python Pipeline v1.2
 #Author:        Axel Runnholm
 #Creation date: 2016-06-16
 #Description:   This is the cluster extraction pipeline for the Hi-PEEC project
@@ -32,6 +32,7 @@ import sys
 import string
 import ast
 import datetime
+import subprocess
 
 import logging
 #If there is a problem, set level=logging.DEBUG to get additional information in the log file
@@ -49,6 +50,7 @@ sys.path.insert(0, './source/')
 import filemanagement
 import extraction
 import catmanagement
+import linemask
 #------------------------------------------------------------------------------
 
 
@@ -57,7 +59,7 @@ import catmanagement
 #==============================================================================
 os.system('clear')
 print 'Hi-PEEC CLUSTER EXTRACTION SOFTWARE'
-print 'Version 1.1'
+print 'Version 1.2'
 print 'Last updated: {}'.format(time.ctime(os.path.getmtime('Hi-PEEC_pipeline.py')))
 print ''
 logging.info('Run started')
@@ -135,6 +137,23 @@ else:
 
 
 #------------------------------------------------------------------------------
+#Removing edge detections
+#------------------------------------------------------------------------------
+if userinput['MASK_EDGES']:
+    logging.info('Removing edge detections')
+    print ''
+    print 'Removing edge detections'
+    print ''
+
+    linemask.mask_edges(userinput, extraction_cat)
+
+    # Create a new reg file
+    # Save region file from extraction catalog
+    xx, yy, fwhm, class_s, mag = np.loadtxt(extraction_cat, skiprows=5, unpack=True)
+    extraction.create_regfile(userinput, xx, yy, 'edges_removed.reg')
+
+
+#------------------------------------------------------------------------------
 #Create growth curve:
 #------------------------------------------------------------------------------
 if userinput['DO_GROWTH']:
@@ -193,7 +212,7 @@ if userinput['DO_PHOT']:
     for image in imagelist:
         filter = extraction.get_filter(image)
 
-        outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
+        outputfile = target_dir + '/photometry/phot_' + filter + '.mag'
         # calculate proper aperture to use
         ap = extraction.calc_aperture(userinput, image)
 

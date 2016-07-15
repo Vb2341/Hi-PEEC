@@ -23,6 +23,8 @@ OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory. If same as
 EXTRACT     True                               # 6 Run source extraction   (True/False)
 IMAGE       F555W_hipeec_WFC3_UVIS_drc_sci.fits # 7 Sextractor input reference image
 REF_FILTER  F555W				# 8 Filter to be used as reference
+
+MASK_EDGES  True                                # 9 Whether to remove spurious edge detections 
 #---------------------------------------------------------------------------------------
 
 
