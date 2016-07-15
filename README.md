@@ -36,23 +36,23 @@ and then try to pull from the repository again.
 
 
 ####Without Git####
-The second way is to simply download the zip file that is contained in the master branch. Note that this is updated less
-often.
+The second way is to simply download the zip file that is contained in the master branch. This archive is kept up-to-date with the latest version released to master.
 
 You download the file by going to ```Source``` in the left sidebar, clicking on the file in the filelist and then clicking ```Raw```
 
 
 ###How to run the pipeline###
-1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/projectstructure))
+1. Set up the required folder structure (see [Here](https://bitbucket.org/C0gito/hi-peec/wiki/config&setup))
 
 3. Check the Hi-PEEC_settings.input file to make sure that the inputs are appropriate.
 
 2. Run ```python Hi-PEEC_pipeline.py``` in a terminal
 
 ###Dependencies###
-Running the pipeline requires a working python 2.7 installation with the following packages installed:
+The pipeline has been thus far only been tested on a Linux Kubuntu system, but should work on any unix based OS.
 
-The pipeline has been thus far only been tested on a Linux Kubuntu system.
+Running the pipeline requires a working installation of Source Extractor and  python 2.7 with the following packages installed:
+
 
 ####math, datahandling and plotting utils####
 These are the large and heavy packages 
@@ -72,6 +72,7 @@ sys
 string
 ast
 datetime
+warnings
 ```
 
 ####astronomy utils####
@@ -81,4 +82,3 @@ pyfits
 pyraf
 pywcs
 ```
-
