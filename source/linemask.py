@@ -168,6 +168,7 @@ def mask_edges(userinput,extraction_cat):
             if not glob.glob(userinput['PYDIR'] + '/init/*.reg'):
                 filemanagement.shutdown('Still no .reg file detected. Shutting down', userinput)
             else:
+                print 'Removing sources outside mask.'
                 file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
                 shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
                 regfile = glob.glob(regfilename)[0]
@@ -184,5 +185,5 @@ def mask_edges(userinput,extraction_cat):
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
     except:
-        print 'Edge masking failed. Proceeding without it.'
+        print 'Edge masking failed. Proceeding without it. Make sure to save the .reg file in image coordinates.'
         return 0

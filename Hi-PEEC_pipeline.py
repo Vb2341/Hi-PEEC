@@ -212,7 +212,7 @@ if userinput['DO_PHOT']:
     for image in imagelist:
         filter = extraction.get_filter(image)
 
-        outputfile = target_dir + '/photometry/phot_'+filter+'.mag'
+        outputfile = target_dir + '/photometry/phot_' + filter + '.mag'
         # calculate proper aperture to use
         ap = extraction.calc_aperture(userinput, image)
 
