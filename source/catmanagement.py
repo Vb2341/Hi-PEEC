@@ -135,6 +135,7 @@ def apcorr_calc(userinputs):
         print '\t Filter: ' + filter
         print '\t Apcor: %.3f' % apcor_avg
         print '\t Apcor error: %.3f' % apcor_err
+        logging.info('{}: Apcorr = {} +- {}'.format(filter, apcor_avg, apcor_err))
 
         # Make a plot for each filter
         fig = plt.figure(figsize = (7,7))
