@@ -24,6 +24,7 @@ import glob
 import os
 import subprocess
 import shutil
+import logging
 from shutil import copyfile
 
 sys.path.insert(0, './source/')
@@ -166,7 +167,9 @@ def mask_edges(userinput,extraction_cat):
             print 'Checking for saved image'
             os.chdir(userinput['OUTDIR'])
             if not glob.glob(userinput['PYDIR'] + '/init/*.reg'):
-                filemanagement.shutdown('Still no .reg file detected. Shutting down', userinput)
+                print 'Still no .reg file detected. Skipping the edge-removal step.'
+                logging.info('No regfile was detected. Edge-removal was skipped.')
+                return 0
             else:
                 print 'Removing sources outside mask.'
                 file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
