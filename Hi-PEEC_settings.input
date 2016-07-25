@@ -62,10 +62,3 @@ DO_CLUSTERS True                                # 19 Do photometry on manually a
 CLUSTERS    manualclusters.coo                  # 20 Catalog for the manually added clusters
                                                 #    (Should be placed in the /init/ directory)
 #---------------------------------------------------------------------------------------
-
-
-#Cleanup
-#---------------------------------------------------------------------------------------
-CLEAN      True                                 # 17 Run the directory cleaning step(True/False)
-#---------------------------------------------------------------------------------------
-
