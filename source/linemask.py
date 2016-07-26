@@ -80,7 +80,6 @@ def get_ends(l,header):
         x2,y2 = wcs_ref.wcs_sky2pix(ra2, dec2, 1)
 
     if x1 == x2: x1 += 1.  # do not permit x1=x2, otherwise gradient undefined.
-    print x1, y1, x2, y2
     return x1, y1, x2, y2
 
 def get_nearedge(x1,y1,x2,y2, Nx, Ny):
@@ -208,12 +207,31 @@ def mask_edges(userinput,extraction_cat):
             print 'Not a recognised input. Skipping edge-removal'
             return 0
     else:
-        regfile = glob.glob(regfilename)[0]
+        files =glob.glob(regfilename)
+        if len(files)>1:
+            print 'There are multiple reg files in the init directory'
+            logging.info('Multiple .reg files found')
+            for a in range(len(files)):
+                print '{}: {}'.format(a,files[a])
+
+            while True:
+                try:
+                    choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
+                    try:
+                        regfile = files[choice]
+                        break
+                    except IndexError:
+                        print 'Not a valid choice. Please choose one of the indicated numbers'
+                except ValueError:
+                    print 'Not a valid choice. Please choose one of the indicated numbers'
+        else:
+            regfile = glob.glob(regfilename)[0]
 
     try:
         print 'Removing sources outside mask.'
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
     except:
-        print 'Edge masking failed. Proceeding without it. Make sure to save the .reg file in image coordinates.'
+        print 'Edge masking failed. Proceeding without it.'
+        logging.info('Edgemasking failed. No mask has been applied')
         return 0
