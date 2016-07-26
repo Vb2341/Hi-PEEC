@@ -171,7 +171,6 @@ def mask_edges(userinput,extraction_cat):
                 logging.info('No regfile was detected. Edge-removal was skipped.')
                 return 0
             else:
-                print 'Removing sources outside mask.'
                 file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
                 shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
                 regfile = glob.glob(regfilename)[0]
@@ -185,6 +184,7 @@ def mask_edges(userinput,extraction_cat):
         regfile = glob.glob(regfilename)[0]
 
     try:
+        print 'Removing sources outside mask.'
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
     except:
