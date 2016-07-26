@@ -20,6 +20,7 @@ import sys
 import scipy as S
 import numpy as np
 import pyfits as PF
+import pywcs
 import glob
 import os
 import subprocess
@@ -46,14 +47,40 @@ def getlines(fn):
     fh.close()
     return d
 
+def convert_to_decimal(RA,DEC):
 
+    RAhms = RA.split(':')
+    DEChms = DEC.split(':')
+    h = float(DEChms[0])
 
-def get_ends(l):
-    x1 = float(l[0])
-    y1 = float(l[1])
-    x2 = float(l[2])
-    y2 = float(l[3])
+    # RA
+    ra = 15.*(float(RAhms[0]) +float(RAhms[1])/60. + float(RAhms[2])/3600.)
+
+    # DEC
+    if h < 0:
+        dec = h - float(DEChms[1])/60. - float(DEChms[2])/3600.
+    else:
+        dec = h + float(DEChms[1])/60. + float(DEChms[2])/3600.
+
+    return ra,dec
+
+def get_ends(l,header):
+    try:
+        x1 = float(l[0])
+        y1 = float(l[1])
+        x2 = float(l[2])
+        y2 = float(l[3])
+    except ValueError:
+        wcs_ref = pywcs.WCS(header)
+
+        ra1,dec1 = convert_to_decimal(l[0],l[1])
+        ra2,dec2 = convert_to_decimal(l[2],l[3])
+
+        x1,y1 = wcs_ref.wcs_sky2pix(ra1, dec1, 1)
+        x2,y2 = wcs_ref.wcs_sky2pix(ra2, dec2, 1)
+
     if x1 == x2: x1 += 1.  # do not permit x1=x2, otherwise gradient undefined.
+    print x1, y1, x2, y2
     return x1, y1, x2, y2
 
 def get_nearedge(x1,y1,x2,y2, Nx, Ny):
@@ -98,7 +125,7 @@ def create_mask(ref, lines):
     for i in range(Ny): dy[i]   = i+1
 
     for d in dat :
-        x1, y1, x2, y2 = get_ends(d)
+        x1, y1, x2, y2 = get_ends(d,head)
         #print x1, y1, "  ->  ", x2, y2
         edge_near = get_nearedge(x1, y1, x2, y2, Nx, Ny)
         m, c = get_fn(x1, y1, x2, y2)
