@@ -178,6 +178,27 @@ def remove_edgedetections(catalog, ref, lines):
                     f.write(l)
                 i+=1
 
+def select_regfile(files):
+    if len(files)>1:
+        print 'There are multiple reg files in the init directory'
+        logging.info('Multiple .reg files found')
+        for a in range(len(files)):
+            print '{}: {}'.format(a,files[a])
+
+        while True:
+            try:
+                choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
+                try:
+                    file = files[choice]
+                    return file
+                except IndexError:
+                    print 'Not a valid choice. Please choose one of the indicated numbers'
+            except ValueError:
+                print 'Not a valid choice. Please choose one of the indicated numbers'
+    else:
+        file = files[0]
+        return file
+
 def mask_edges(userinput,extraction_cat):
     ref_image =userinput['DATA'] + '/' + userinput['IMAGE']
     regfilename = userinput['OUTDIR'] + '/init/*.reg'
@@ -200,24 +221,8 @@ def mask_edges(userinput,extraction_cat):
 
                 files = glob.glob(userinput['PYDIR'] + '/init/*.reg')
 
-                if len(files)>1:
-                    print 'There are multiple reg files in the init directory'
-                    logging.info('Multiple .reg files found')
-                    for a in range(len(files)):
-                        print '{}: {}'.format(a,files[a])
-
-                    while True:
-                        try:
-                            choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
-                            try:
-                                file = files[choice].split('/')[-1]
-                                break
-                            except IndexError:
-                                print 'Not a valid choice. Please choose one of the indicated numbers'
-                        except ValueError:
-                            print 'Not a valid choice. Please choose one of the indicated numbers'
-                else:
-                    file = files[0].split('/')[-1]
+                file = select_regfile(files)
+                file = file.split('/')[-1]
 
                 shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
                 regfile = glob.glob(regfilename)[0]
@@ -228,25 +233,8 @@ def mask_edges(userinput,extraction_cat):
             print 'Not a recognised input. Skipping edge-removal'
             return 0
     else:
-        files =glob.glob(regfilename)
-        if len(files)>1:
-            print 'There are multiple reg files in the init directory'
-            logging.info('Multiple .reg files found')
-            for a in range(len(files)):
-                print '{}: {}'.format(a,files[a])
-
-            while True:
-                try:
-                    choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
-                    try:
-                        regfile = files[choice]
-                        break
-                    except IndexError:
-                        print 'Not a valid choice. Please choose one of the indicated numbers'
-                except ValueError:
-                    print 'Not a valid choice. Please choose one of the indicated numbers'
-        else:
-            regfile = glob.glob(regfilename)[0]
+        files = glob.glob(regfilename)
+        regfile = select_regfile(files)
 
     try:
         print 'Removing sources outside mask.'
