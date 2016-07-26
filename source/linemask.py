@@ -80,7 +80,6 @@ def get_ends(l,header):
         x2,y2 = wcs_ref.wcs_sky2pix(ra2, dec2, 1)
 
     if x1 == x2: x1 += 1.  # do not permit x1=x2, otherwise gradient undefined.
-    print x1, y1, x2, y2
     return x1, y1, x2, y2
 
 def get_nearedge(x1,y1,x2,y2, Nx, Ny):
@@ -179,6 +178,27 @@ def remove_edgedetections(catalog, ref, lines):
                     f.write(l)
                 i+=1
 
+def select_regfile(files):
+    if len(files)>1:
+        print 'There are multiple reg files in the init directory'
+        logging.info('Multiple .reg files found')
+        for a in range(len(files)):
+            print '{}: {}'.format(a,files[a])
+
+        while True:
+            try:
+                choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
+                try:
+                    file = files[choice]
+                    return file
+                except IndexError:
+                    print 'Not a valid choice. Please choose one of the indicated numbers'
+            except ValueError:
+                print 'Not a valid choice. Please choose one of the indicated numbers'
+    else:
+        file = files[0]
+        return file
+
 def mask_edges(userinput,extraction_cat):
     ref_image =userinput['DATA'] + '/' + userinput['IMAGE']
     regfilename = userinput['OUTDIR'] + '/init/*.reg'
@@ -198,7 +218,12 @@ def mask_edges(userinput,extraction_cat):
                 logging.info('No regfile was detected. Edge-removal was skipped.')
                 return 0
             else:
-                file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
+
+                files = glob.glob(userinput['PYDIR'] + '/init/*.reg')
+
+                file = select_regfile(files)
+                file = file.split('/')[-1]
+
                 shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
                 regfile = glob.glob(regfilename)[0]
         elif inp =='n':
@@ -208,12 +233,14 @@ def mask_edges(userinput,extraction_cat):
             print 'Not a recognised input. Skipping edge-removal'
             return 0
     else:
-        regfile = glob.glob(regfilename)[0]
+        files = glob.glob(regfilename)
+        regfile = select_regfile(files)
 
     try:
         print 'Removing sources outside mask.'
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
     except:
-        print 'Edge masking failed. Proceeding without it. Make sure to save the .reg file in image coordinates.'
+        print 'Edge masking failed. Proceeding without it.'
+        logging.info('Edgemasking failed. No mask has been applied')
         return 0
