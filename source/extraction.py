@@ -329,19 +329,21 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     # Select the annulus depending on whether it is overwritten in the function call or not
     if annulus == '':
         iraf.fitskypars.annulus = userinputs['ANNULUS']
-        logging.info('Using annulus from inputfile ({}px)'.format(userinputs['ANNULUS']))
+        logging.debug('Using annulus from inputfile ({}px)'.format(userinputs['ANNULUS']))
     else:
         iraf.fitskypars.annulus = annulus
-        logging.info('Using user specified annulus ({}px)'.format(annulus))
+        logging.debug('Using user specified annulus ({}px)'.format(annulus))
     if dannulus == '':
         iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
-        logging.info('Using annulus width from inputfile ({}px)'.format(userinputs['D_ANNULUS']))
+        logging.debug('Using annulus width from inputfile ({}px)'.format(userinputs['D_ANNULUS']))
     else:
         iraf.fitskypars.dannulu = dannulus
-        logging.info('Using user specified annulus width ({}px)'.format(dannulus))
+        logging.debug('Using user specified annulus width ({}px)'.format(dannulus))
 
     iraf.photpars.apertures = apertures
+    logging.debug('Using aperture(s) of {}px'.format(apertures))
     iraf.photpars.zmag = zp
+    logging.debug('Setting zeropoint to {}'.format(zp))
 
     # Do phot
     iraf.phot(image, catalog, output)
