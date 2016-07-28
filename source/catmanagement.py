@@ -135,6 +135,7 @@ def apcorr_calc(userinputs):
         print '\t Filter: ' + filter
         print '\t Apcor: %.3f' % apcor_avg
         print '\t Apcor error: %.3f' % apcor_err
+        logging.info('{}: Apcorr = {} +- {}'.format(filter, apcor_avg, apcor_err))
 
         # Make a plot for each filter
         fig = plt.figure(figsize = (7,7))
@@ -276,8 +277,10 @@ def apply_corrs(userinput, cat):
 
     # Load apcorrs
     logging.info('Loading apcorrs from file')
-    apf, apc, ape = np.genfromtxt(target_dir + '/photometry/avg_aperture_correction.txt',
-                                  unpack=True, usecols=(0, 1, 2))
+    apf, apc, ape = np.loadtxt(target_dir + '/photometry/avg_aperture_correction.txt',
+                                  unpack=True, usecols=(0, 1, 2),dtype='str')
+    apc = apc.astype(float)
+    ape = ape.astype(float)
 
     for image in imlist:
 

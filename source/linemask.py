@@ -20,10 +20,12 @@ import sys
 import scipy as S
 import numpy as np
 import pyfits as PF
+import pywcs
 import glob
 import os
 import subprocess
 import shutil
+import logging
 from shutil import copyfile
 
 sys.path.insert(0, './source/')
@@ -45,13 +47,38 @@ def getlines(fn):
     fh.close()
     return d
 
+def convert_to_decimal(RA,DEC):
 
+    RAhms = RA.split(':')
+    DEChms = DEC.split(':')
+    h = float(DEChms[0])
 
-def get_ends(l):
-    x1 = float(l[0])
-    y1 = float(l[1])
-    x2 = float(l[2])
-    y2 = float(l[3])
+    # RA
+    ra = 15.*(float(RAhms[0]) +float(RAhms[1])/60. + float(RAhms[2])/3600.)
+
+    # DEC
+    if h < 0:
+        dec = h - float(DEChms[1])/60. - float(DEChms[2])/3600.
+    else:
+        dec = h + float(DEChms[1])/60. + float(DEChms[2])/3600.
+
+    return ra,dec
+
+def get_ends(l,header):
+    try:
+        x1 = float(l[0])
+        y1 = float(l[1])
+        x2 = float(l[2])
+        y2 = float(l[3])
+    except ValueError:
+        wcs_ref = pywcs.WCS(header)
+
+        ra1,dec1 = convert_to_decimal(l[0],l[1])
+        ra2,dec2 = convert_to_decimal(l[2],l[3])
+
+        x1,y1 = wcs_ref.wcs_sky2pix(ra1, dec1, 1)
+        x2,y2 = wcs_ref.wcs_sky2pix(ra2, dec2, 1)
+
     if x1 == x2: x1 += 1.  # do not permit x1=x2, otherwise gradient undefined.
     return x1, y1, x2, y2
 
@@ -97,7 +124,7 @@ def create_mask(ref, lines):
     for i in range(Ny): dy[i]   = i+1
 
     for d in dat :
-        x1, y1, x2, y2 = get_ends(d)
+        x1, y1, x2, y2 = get_ends(d,head)
         #print x1, y1, "  ->  ", x2, y2
         edge_near = get_nearedge(x1, y1, x2, y2, Nx, Ny)
         m, c = get_fn(x1, y1, x2, y2)
@@ -151,6 +178,27 @@ def remove_edgedetections(catalog, ref, lines):
                     f.write(l)
                 i+=1
 
+def select_regfile(files):
+    if len(files)>1:
+        print 'There are multiple reg files in the init directory'
+        logging.info('Multiple .reg files found')
+        for a in range(len(files)):
+            print '{}: {}'.format(a,files[a])
+
+        while True:
+            try:
+                choice = int(raw_input('Choose file ({}-{}): '.format(0,len(files)-1)))
+                try:
+                    file = files[choice]
+                    return file
+                except IndexError:
+                    print 'Not a valid choice. Please choose one of the indicated numbers'
+            except ValueError:
+                print 'Not a valid choice. Please choose one of the indicated numbers'
+    else:
+        file = files[0]
+        return file
+
 def mask_edges(userinput,extraction_cat):
     ref_image =userinput['DATA'] + '/' + userinput['IMAGE']
     regfilename = userinput['OUTDIR'] + '/init/*.reg'
@@ -166,10 +214,16 @@ def mask_edges(userinput,extraction_cat):
             print 'Checking for saved image'
             os.chdir(userinput['OUTDIR'])
             if not glob.glob(userinput['PYDIR'] + '/init/*.reg'):
-                filemanagement.shutdown('Still no .reg file detected. Shutting down', userinput)
+                print 'Still no .reg file detected. Skipping the edge-removal step.'
+                logging.info('No regfile was detected. Edge-removal was skipped.')
+                return 0
             else:
-                print 'Removing sources outside mask.'
-                file = glob.glob(userinput['PYDIR'] + '/init/*.reg')[0].split('/')[-1]
+
+                files = glob.glob(userinput['PYDIR'] + '/init/*.reg')
+
+                file = select_regfile(files)
+                file = file.split('/')[-1]
+
                 shutil.copyfile(userinput['PYDIR'] + '/init/' + file,userinput['OUTDIR'] + '/init/' + file)
                 regfile = glob.glob(regfilename)[0]
         elif inp =='n':
@@ -179,11 +233,14 @@ def mask_edges(userinput,extraction_cat):
             print 'Not a recognised input. Skipping edge-removal'
             return 0
     else:
-        regfile = glob.glob(regfilename)[0]
+        files = glob.glob(regfilename)
+        regfile = select_regfile(files)
 
     try:
+        print 'Removing sources outside mask.'
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
     except:
-        print 'Edge masking failed. Proceeding without it. Make sure to save the .reg file in image coordinates.'
+        print 'Edge masking failed. Proceeding without it.'
+        logging.info('Edgemasking failed. No mask has been applied')
         return 0
