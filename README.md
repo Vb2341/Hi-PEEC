@@ -5,6 +5,10 @@
 This repo contains the code for cluster extraction in Hi-PEEC based on the LEGUS cluster extraction script.
 
 ### Changelog ###
+#### v 1.3 ####
+- Fixes major bug in the aperture correction application
+- Adds fk5 support to the Edgemasking 
+- Adds support for multiple regionfiles to the edgemasking
 
 #### v 1.2 ####
 - Add edge masking
