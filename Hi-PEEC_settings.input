@@ -13,7 +13,7 @@ DISTANCE    67.8                                # 2 distance to target in units 
 #Folder setup
 #---------------------------------------------------------------------------------------
 SETUP       True                                # 3 set up directories etc? (True/False)
-DATA        /home/user/Hi-PEEC/Data/NGC1614     # 4 Directory where image files are located
+DATA        /home/user/Hi-PEEC/Data/NGC1614/HighRes     # 4 Directory where image files are located
                                                 #   (specify as full path(without ending / )
 OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory.
 						                        #   (specify as full path(without ending / )
@@ -22,11 +22,11 @@ OUTDIR      /home/user/Hi-PEEC/Output/NGC1614   # 5 Output directory.
 
 #Extraction parameters
 #---------------------------------------------------------------------------------------
-EXTRACT     True                                # 6 Run source extraction   (True/False)
-IMAGE       F555W_hipeec_WFC3_UVIS_drc_sci.fits # 7 Sextractor input reference image
-REF_FILTER  F555W				                # 8 Filter to be used as reference
+EXTRACT     True                                 # 6 Run source extraction   (True/False)
+IMAGE       F555W_NGC1614_WFC3_UVIS_drc_sci.fits # 7 Sextractor input reference image
+REF_FILTER  F555W				                 # 8 Filter to be used as reference
 
-MASK_EDGES  True                                # 9 Whether to remove spurious edge detections 
+MASK_EDGES  True                                 # 9 Whether to remove spurious edge detections 
 #---------------------------------------------------------------------------------------
 
 
@@ -43,24 +43,27 @@ D_ANNULUS   1                                   # 12 Skyannulus width (pixels)
 #Aperture correction parameters:
 #---------------------------------------------------------------------------------------
 APCORR      True                                # 13 Run aperture correction calculation step
-STARS	    foregroundstars2.coo                # 14 File containing isolated star coords (x y) 
+STARS	    foregroundstarsLeonardo.coo         # 14 File containing isolated star coords (x y) 
                                                 #    (needs to be located in the /init/ directory)
-UPLIM       -0.1                                # 15 upper limit for avg aperture correction 
+ADD_STARS   singlestarsSBC.coo                  # 15 File with additional single stars. (optional)
+ADD_FILTER  F140LP                              # 16 Filters for which to use the additional star
+                                                #    catalog 
+UPLIM       -0.1                                # 17 upper limit for avg aperture correction 
                                                 #    (may need to be less negative for more distant galaxies)
-LOWLIM      -2                                  # 16 lower limit for avg aperture correction
+LOWLIM      -2                                  # 18 lower limit for avg aperture correction
                                                 #    (may need to be more negative for very nearby galaxies)
 #---------------------------------------------------------------------------------------
 
 #Catalog parameters
 #---------------------------------------------------------------------------------------
 CREATE_CAT  True                                # 17 Whether to compile the results into a catalog (True/False)
-MAGERR      1                                   # 18 Level for photometry error cut (MAG)
+MAGERR      0.3                                 # 18 Level for photometry error cut (MAG)
 #---------------------------------------------------------------------------------------
 
 
 #Manually added clusters
 #---------------------------------------------------------------------------------------
-DO_CLUSTERS True                                # 19 Do photometry on manually added clusters(True/False)
+DO_CLUSTERS False                               # 19 Do photometry on manually added clusters(True/False)
 CLUSTERS    manualclusters.coo                  # 20 Catalog for the manually added clusters
                                                 #    (Should be placed in the /init/ directory)
 #---------------------------------------------------------------------------------------

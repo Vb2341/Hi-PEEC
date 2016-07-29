@@ -159,6 +159,14 @@ if userinput['MASK_EDGES']:
 if userinput['DO_GROWTH']:
     logging.info('RUNNING GROWTH CURVE ANALYSIS')
 
+    # Check if there is an additional single star file.
+    try:
+        add_stars = userinput['ADD_STARS']
+        add_filter = userinput['ADD_FILTER']
+        additional_starfiles = True
+    except IndexError:
+        additional_starfiles = False
+
     # Running initial photometry on the isolated stars & creating a growth curve
     print ''
     print 'Running initial photometry on the isolated stars'
@@ -169,11 +177,27 @@ if userinput['DO_GROWTH']:
     growth_catalog = extraction.photometry(userinput, userinput['IMAGE'],
                                 userinput['STARS'], 'isolated_stars.mag',
                                 growth_curve_apertures )
-    #Create the growthcurve
+    #Create the growthcurve for ref filter
     print ''
-    print 'Creating growth curve'
-    extraction.growth_curve(userinput, growth_catalog)
+    print 'Creating growth curve for {}'.format(userinput['REF_FILTER'])
+    extraction.growth_curve(userinput, userinput['REF_FILTER'], growth_catalog)
 
+    # Create a growth curve for any additional filters
+    if additional_starfiles == True:
+        image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_sci*')
+        if not image_list:
+            print 'No frame matching additional single star filter'
+        else:
+            image = image_list[0].split('/')[-1]
+
+            # Do photometry for the growthcurve
+            growth_catalog = extraction.photometry(userinput, image,
+                                        add_stars, 'isolated_stars_{}.mag'.format(add_filter),
+                                        growth_curve_apertures )
+            #Create the growthcurve for ref filter
+            print ''
+            print 'Creating growth curve for {}'.format(add_filter)
+            extraction.growth_curve(userinput, add_filter, growth_catalog)
 
 #------------------------------------------------------------------------------
 #Do science photometry:
