@@ -163,6 +163,11 @@ if userinput['DO_GROWTH']:
     try:
         add_stars = userinput['ADD_STARS']
         add_filter = userinput['ADD_FILTER']
+
+        add_filter_list = add_filter.split(',')
+        if len(add_filter_list) == 1:
+            add_filter_list = [add_filter]
+
         additional_starfiles = True
     except IndexError:
         additional_starfiles = False
@@ -184,20 +189,21 @@ if userinput['DO_GROWTH']:
 
     # Create a growth curve for any additional filters
     if additional_starfiles == True:
-        image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_sci*')
-        if not image_list:
-            print 'No frame matching additional single star filter'
-        else:
-            image = image_list[0].split('/')[-1]
+        for add_filter in add_filter_list:
+            image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_sci*')
+            if not image_list:
+                print 'No frame matching additional single star filter'
+            else:
+                image = image_list[0].split('/')[-1]
 
-            # Do photometry for the growthcurve
-            growth_catalog = extraction.photometry(userinput, image,
-                                        add_stars, 'isolated_stars_{}.mag'.format(add_filter),
-                                        growth_curve_apertures )
-            #Create the growthcurve for ref filter
-            print ''
-            print 'Creating growth curve for {}'.format(add_filter)
-            extraction.growth_curve(userinput, add_filter, growth_catalog)
+                # Do photometry for the growthcurve
+                growth_catalog = extraction.photometry(userinput, image,
+                                            add_stars, 'isolated_stars_{}.mag'.format(add_filter),
+                                            growth_curve_apertures )
+                #Create the growthcurve for ref filter
+                print ''
+                print 'Creating growth curve for {}'.format(add_filter)
+                extraction.growth_curve(userinput, add_filter, growth_catalog)
 
 #------------------------------------------------------------------------------
 #Do science photometry:
