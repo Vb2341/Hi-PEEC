@@ -64,6 +64,11 @@ def apcorr_calc(userinputs):
         add_stars = userinputs['ADD_STARS']
         add_filter = userinputs['ADD_FILTER']
         additional_starfiles = True
+
+        add_filter_list = add_filter.split(',')
+
+        add_filter_list = [a.lower() for a in add_filter_list]
+
     except IndexError:
         additional_starfiles = False
 
@@ -82,13 +87,15 @@ def apcorr_calc(userinputs):
         filter = extraction.get_filter(image)
 
         if additional_starfiles:
-            if filter.lower() == add_filter.lower():
+            if filter.lower() in add_filter_list:
                 starfile = add_stars
             else:
                 starfile = userinputs['STARS']
         else:
             starfile = userinputs['STARS']
 
+        print filter
+        print starfile
         logging.info('Using {} as star input for apcorr'.format(starfile))
 
         #-----------------------------------------------------------------------
