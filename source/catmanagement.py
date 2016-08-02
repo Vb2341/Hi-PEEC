@@ -61,14 +61,26 @@ def apcorr_calc(userinputs):
 
     # Check if there is an additional single star file.
     try:
+        # Split up the input
         add_stars = userinputs['ADD_STARS']
-        add_filter = userinputs['ADD_FILTER']
-        additional_starfiles = True
+        add_stars_list = add_stars.split(',')
+        if len(add_stars_list) == 1:
+            add_stars_list = [add_stars]
+        add_stars_list = add_stars_list
 
+        add_filter = userinputs['ADD_FILTER']
         add_filter_list = add_filter.split(',')
 
         add_filter_list = [a.lower() for a in add_filter_list]
 
+        logging.info('Using additional starfiles {} for filters {}'
+                     .format(add_stars_list,add_filter_list))
+
+        if len(add_filter_list) != len(add_stars_list):
+            if len(add_stars_list) != 1:
+                logging.info('Mismatch in number of additional filters and files.')
+                filemanagement.shutdown('Number of filters and additional starfiles does not match.')
+        additional_starfiles = True
     except IndexError:
         additional_starfiles = False
 
@@ -86,9 +98,14 @@ def apcorr_calc(userinputs):
     for image in imagelist:
         filter = extraction.get_filter(image)
 
+        # Choose input parameters
         if additional_starfiles:
             if filter.lower() in add_filter_list:
-                starfile = add_stars
+                if len(add_stars_list) != 1:
+                    starfile = [add_stars_list[a] for a in range(len(add_filter_list))\
+                                if add_filter_list[a] == filter.lower()][0]
+                else:
+                    starfile = add_stars_list[0]
             else:
                 starfile = userinputs['STARS']
         else:

@@ -46,7 +46,8 @@ APCORR      True                                # 13 Run aperture correction cal
 STARS       foregroundstarsLeonardo.coo         # 14 File containing isolated star coords (x y) 
                                                 #    (needs to be located in the /init/ directory)
 ADD_STARS   singlestarsSBC.coo                  # 15 File with additional single stars. (optional)
-ADD_FILTER  F140LP,F225W                        # 16 Filters for which to use the additional star
+                                                #    (if multiple: comma separated, no spaces)
+ADD_FILTER  F140LP                              # 16 Filters for which to use the additional star
                                                 #    catalog (comma separated, no spaces)
 UPLIM       -0.1                                # 17 upper limit for avg aperture correction 
                                                 #    (may need to be less negative for more distant galaxies)

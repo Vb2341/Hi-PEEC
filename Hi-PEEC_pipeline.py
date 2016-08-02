@@ -162,12 +162,22 @@ if userinput['DO_GROWTH']:
     # Check if there is an additional single star file.
     try:
         add_stars = userinput['ADD_STARS']
-        add_filter = userinput['ADD_FILTER']
+        add_stars_list = add_stars.split(',')
+        if len(add_stars_list) == 1:
+            add_stars_list = [add_stars]
 
+        add_filter = userinput['ADD_FILTER']
         add_filter_list = add_filter.split(',')
         if len(add_filter_list) == 1:
             add_filter_list = [add_filter]
 
+        logging.info('Using additional starfiles {} for filters {}'
+                     .format(add_stars_list,add_filter_list))
+
+        if len(add_filter_list) != len(add_stars_list):
+            if len(add_stars_list) != 1:
+                logging.info('Mismatch in number of additional filters and files.')
+                filemanagement.shutdown('Number of filters and additional starfiles does not match.')
         additional_starfiles = True
     except IndexError:
         additional_starfiles = False
@@ -189,7 +199,13 @@ if userinput['DO_GROWTH']:
 
     # Create a growth curve for any additional filters
     if additional_starfiles == True:
-        for add_filter in add_filter_list:
+        for a in range(len(add_filter_list)):
+            add_filter = add_filter_list[a]
+            if len(add_stars_list) == 1:
+                add_stars = add_stars_list[0]
+            else:
+                add_stars = add_stars_list[a]
+
             image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_sci*')
             if not image_list:
                 print 'No frame matching additional single star filter'
