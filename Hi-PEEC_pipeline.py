@@ -179,7 +179,7 @@ if userinput['DO_GROWTH']:
                 logging.info('Mismatch in number of additional filters and files.')
                 filemanagement.shutdown('Number of filters and additional starfiles does not match.')
         additional_starfiles = True
-    except IndexError:
+    except KeyError:
         additional_starfiles = False
 
     # Running initial photometry on the isolated stars & creating a growth curve

@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-#Title: Hi-PEEC Aperture correction
+#Title: Hi-PEEC Catalogue management
 #Author:        Axel Runnholm
 #Creation date: 2016-06-20
 #Description:   This script contains the routines for estimating and applying
@@ -81,7 +81,7 @@ def apcorr_calc(userinputs):
                 logging.info('Mismatch in number of additional filters and files.')
                 filemanagement.shutdown('Number of filters and additional starfiles does not match.')
         additional_starfiles = True
-    except IndexError:
+    except KeyError:
         additional_starfiles = False
 
     #Set directory of the photometry as variable since it is target for the function
