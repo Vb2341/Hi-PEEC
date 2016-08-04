@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-#Title: Hi-PEEC Aperture correction
+#Title: Hi-PEEC Catalogue management
 #Author:        Axel Runnholm
 #Creation date: 2016-06-20
 #Description:   This script contains the routines for estimating and applying
@@ -59,6 +59,31 @@ def apcorr_calc(userinputs):
     lowlim = userinputs['LOWLIM']
     uplim = userinputs['UPLIM']
 
+    # Check if there is an additional single star file.
+    try:
+        # Split up the input
+        add_stars = userinputs['ADD_STARS']
+        add_stars_list = add_stars.split(',')
+        if len(add_stars_list) == 1:
+            add_stars_list = [add_stars]
+        add_stars_list = add_stars_list
+
+        add_filter = userinputs['ADD_FILTER']
+        add_filter_list = add_filter.split(',')
+
+        add_filter_list = [a.lower() for a in add_filter_list]
+
+        logging.info('Using additional starfiles {} for filters {}'
+                     .format(add_stars_list,add_filter_list))
+
+        if len(add_filter_list) != len(add_stars_list):
+            if len(add_stars_list) != 1:
+                logging.info('Mismatch in number of additional filters and files.')
+                filemanagement.shutdown('Number of filters and additional starfiles does not match.')
+        additional_starfiles = True
+    except KeyError:
+        additional_starfiles = False
+
     #Set directory of the photometry as variable since it is target for the function
     phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
@@ -73,6 +98,23 @@ def apcorr_calc(userinputs):
     for image in imagelist:
         filter = extraction.get_filter(image)
 
+        # Choose input parameters
+        if additional_starfiles:
+            if filter.lower() in add_filter_list:
+                if len(add_stars_list) != 1:
+                    starfile = [add_stars_list[a] for a in range(len(add_filter_list))\
+                                if add_filter_list[a] == filter.lower()][0]
+                else:
+                    starfile = add_stars_list[0]
+            else:
+                starfile = userinputs['STARS']
+        else:
+            starfile = userinputs['STARS']
+
+        print filter
+        print starfile
+        logging.info('Using {} as star input for apcorr'.format(starfile))
+
         #-----------------------------------------------------------------------
         # Do required photometry
         #-----------------------------------------------------------------------
@@ -81,7 +123,7 @@ def apcorr_calc(userinputs):
         photometry_file_large = phot_dir + 'large_apcorr_' + filter + '.mag'
 
         apcorr_cat_large = extraction.photometry(userinputs, image,
-                            userinputs['STARS'], photometry_file_large,
+                            starfile, photometry_file_large,
                             '20.0', annulus=21.0, dannulus=1.0)
 
         # Small (user selected) aperture photometry
@@ -90,7 +132,7 @@ def apcorr_calc(userinputs):
         # calculate appropriate aperture to use
         ap = extraction.calc_aperture(userinputs,image)
         apcorr_cat_small = extraction.photometry(userinputs, image,
-                            userinputs['STARS'], photometry_file_small,
+                            starfile, photometry_file_small,
                             ap)
 
 

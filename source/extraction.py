@@ -429,7 +429,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     return fullcat_mag_short
 
 
-def growth_curve(userinputs, catalog):
+def growth_curve(userinputs, filter, catalog):
     """Function for calculating and plotting a growth curve based on input photometry
     Inputs:
         userinputs  (dict)  - dictionary with results from the user input file.
@@ -445,7 +445,7 @@ def growth_curve(userinputs, catalog):
     aper_st, flux_st = np.loadtxt(catalog, unpack=True, usecols=(0,3))
 
     #Growth curve is only done on the ref image so we get the filter from userinp.
-    ref_filter = userinputs['REF_FILTER']
+    ref_filter = filter
 
     ratio_st = np.empty(len(aper_st))
 
@@ -497,5 +497,5 @@ def growth_curve(userinputs, catalog):
     plt.xlim(1,20)
     plt.minorticks_on()
 
-    fig.savefig(userinputs['OUTDIR'] + '/plots/plot_growth_curve.pdf')
+    fig.savefig(userinputs['OUTDIR'] + '/plots/plot_growth_curve_{}.pdf'.format(ref_filter))
 
