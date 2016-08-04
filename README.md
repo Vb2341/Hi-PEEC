@@ -5,6 +5,11 @@
 This repo contains the code for cluster extraction in Hi-PEEC based on the LEGUS cluster extraction script.
 
 ### Changelog ###
+#### v 1.4 ####
+- Adds in support for using separate isolated source files for certain filters
+
+This change supports both multiple filters for a single additional starfile and also multiple additional files for multiple filters.
+
 #### v 1.3 ####
 - Fixes major bug in the aperture correction application
 - Adds fk5 support to the Edgemasking 
