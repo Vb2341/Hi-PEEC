@@ -19,8 +19,8 @@ from __future__ import division#,print_function
 import sys
 import scipy as S
 import numpy as np
-import pyfits as PF
-import pywcs
+from astropy.io import fits
+from astropy import wcs
 import glob
 import os
 import subprocess
@@ -71,7 +71,7 @@ def get_ends(l,header):
         x2 = float(l[2])
         y2 = float(l[3])
     except ValueError:
-        wcs_ref = pywcs.WCS(header)
+        wcs_ref = wcs.WCS(header)
 
         ra1,dec1 = convert_to_decimal(l[0],l[1])
         ra2,dec2 = convert_to_decimal(l[2],l[3])
@@ -113,8 +113,8 @@ def create_mask(ref, lines):
 
     dat  = [ l.replace("line(", "").split(")")[0].split(",")  for l in getlines(fnLines) if l.startswith("line") ]
 
-    head   = PF.getheader(fnRef)
-    img    = PF.getdata(fnRef)
+    head   = fits.getheader(fnRef)
+    img    = fits.getdata(fnRef)
     mask   = S.ones_like(img)
     Ny, Nx = img.shape
 
@@ -144,7 +144,7 @@ def create_mask(ref, lines):
         else           : ind = dy < (m*dx + c)
         mask[ind]  = 0.
 
-    PF.writeto('mask.fits', mask, header=head, clobber=True)
+    fits.writeto('mask.fits', mask, header=head, clobber=True)
 
     return mask
 
@@ -160,6 +160,7 @@ def remove_edgedetections(catalog, ref, lines):
     """
 
     mask = create_mask(ref, lines)
+
 
     xx, yy, fwhm, class_s, mag = np.loadtxt(catalog, skiprows=5, unpack=True)
 
@@ -238,9 +239,12 @@ def mask_edges(userinput,extraction_cat):
 
     try:
         print 'Removing sources outside mask.'
+        print 'Using {} to mask sources'.format(regfile)
         remove_edgedetections(extraction_cat, ref_image, regfile)
         return 1
-    except:
+    except Exception as e:
         print 'Edge masking failed. Proceeding without it.'
         logging.info('Edgemasking failed. No mask has been applied')
+        print sys.exc_traceback()
+        sys.exit(0)
         return 0

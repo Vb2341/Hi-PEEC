@@ -63,10 +63,12 @@ import time, shutil
 import sys
 import string
 import matplotlib.pyplot as plt
-import os, glob, pyfits, pdb, math
+import os, glob, pdb, math
 from pyraf import iraf
-import pywcs
 
+
+from astropy.io import fits
+from astropy import wcs
 
 
 # Location of target directory (should be current directory)
@@ -267,7 +269,7 @@ if  flagstep1 == 'yes':
             os.rename(source, destination)
 
             # Update header of each image slightly
-            pf = pyfits.open(destination, mode='update')
+            pf = fits.open(destination, mode='update')
             pf[0].header['BUNIT']= 'ELECTRONS/S'
             pf.close()
 
@@ -384,8 +386,8 @@ if  flagstep2 == 'yes':
     ref_image = [image for image in imlist if ref_filter in image][0]
 
     # Set the necessary variables for photometry on the reference image
-    ref_exptime = pyfits.getheader(ref_image)['EXPTIME']
-    ref_inst = pyfits.getheader(ref_image)['INSTRUME']
+    ref_exptime = fits.getheader(ref_image)['EXPTIME']
+    ref_inst = fits.getheader(ref_image)['INSTRUME']
     ref_inst = ref_inst.lower()
 
     match = (inst_zp == ref_inst) & (filter_zp == ref_filter)
@@ -728,8 +730,8 @@ if  flagstep3 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Set the necessary variables for photometry on the reference image
-        exptime = pyfits.getheader(image)['EXPTIME']
-        inst = pyfits.getheader(image)['INSTRUME']
+        exptime = fits.getheader(image)['EXPTIME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         match = (inst_zp == inst) & (filter_zp == filter)
@@ -839,8 +841,8 @@ if  flagstep3 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Set the necessary variables for photometry on the reference image
-        exptime = pyfits.getheader(image)['EXPTIME']
-        inst = pyfits.getheader(image)['INSTRUME']
+        exptime = fits.getheader(image)['EXPTIME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         match = (inst_zp == inst) & (filter_zp == filter)
@@ -882,8 +884,8 @@ if  flagstep3 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Set the necessary variables for photometry on the reference image
-        exptime = pyfits.getheader(image)['EXPTIME']
-        inst = pyfits.getheader(image)['INSTRUME']
+        exptime = fits.getheader(image)['EXPTIME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         match = (inst_zp == inst) & (filter_zp == filter)
@@ -1024,8 +1026,8 @@ if  flagstep4 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Set the necessary variables for photometry on the reference image
-        exptime = pyfits.getheader(image)['EXPTIME']
-        inst = pyfits.getheader(image)['INSTRUME']
+        exptime = fits.getheader(image)['EXPTIME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         match = (inst_zp == inst) & (filter_zp == filter)
@@ -1065,7 +1067,7 @@ if  flagstep4 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Set the necessary variables for photometry on the reference image
-        inst = pyfits.getheader(image)['INSTRUME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         # Pick right relation for instrument
@@ -1261,7 +1263,7 @@ if  flagstep5 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Get instrument from header
-        instr = pyfits.getheader(image)['INSTRUME']
+        instr = fits.getheader(image)['INSTRUME']
         instr = instr.lower()
 
         if (instr == 'wfc3') & (filter == 'f275w'):
@@ -1298,11 +1300,11 @@ if  flagstep5 == 'yes':
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if ref_filter in image][0]
 
-    # Get header from reference image using pyfits
-    header_ref = pyfits.getheader(ref_image)
+    # Get header from reference image using fits
+    header_ref = fits.getheader(ref_image)
 
     # Get wcs solution from reference image header
-    wcs_ref = pywcs.WCS(header_ref)
+    wcs_ref = wcs.WCS(header_ref)
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra_2n, dec_2n = wcs_ref.wcs_pix2sky(xc5_2n, yc5_2n, 1)
@@ -1602,7 +1604,7 @@ if  flagstep5 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Get instrument from header
-        instr = pyfits.getheader(image)['INSTRUME']
+        instr = fits.getheader(image)['INSTRUME']
 
         filterlist[i] = filter.upper()
         instlist[i] = instr + '/'
@@ -1780,8 +1782,8 @@ if  flagstep6 == 'yes':
 
 
     # Get necessary variables for reference/smoothed image (center_image)
-    cen_exptime = pyfits.getheader(center_image)['EXPTIME']
-    cen_inst = pyfits.getheader(center_image)['INSTRUME']
+    cen_exptime = fits.getheader(center_image)['EXPTIME']
+    cen_inst = fits.getheader(center_image)['INSTRUME']
     cen_inst = cen_inst.lower()
 
     cen_filter = center_image.split('/')[-1].split('_')[2]
@@ -1824,8 +1826,8 @@ if  flagstep6 == 'yes':
 
     for image in imlist:
 
-        exptime = pyfits.getheader(image)['EXPTIME']
-        inst = pyfits.getheader(image)['INSTRUME']
+        exptime = fits.getheader(image)['EXPTIME']
+        inst = fits.getheader(image)['INSTRUME']
         inst = inst.lower()
 
         filter = image.split('/')[-1].split('_')[2]
@@ -2045,7 +2047,7 @@ if  flagstep6 == 'yes':
         filter = image.split('/')[-1].split('_')[2]
 
         # Get instrument from header
-        instr = pyfits.getheader(image)['INSTRUME']
+        instr = fits.getheader(image)['INSTRUME']
         instr = instr.lower()
 
         if (instr == 'wfc3') & (filter == 'f275w'):
@@ -2082,11 +2084,11 @@ if  flagstep6 == 'yes':
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if ref_filter in image][0]
 
-    # Get header from reference image using pyfits
-    header_ref = pyfits.getheader(ref_image)
+    # Get header from reference image using fits
+    header_ref = fits.getheader(ref_image)
 
     # Get wcs solution from reference image header
-    wcs_ref = pywcs.WCS(header_ref)
+    wcs_ref = wcs.WCS(header_ref)
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra_2n, dec_2n = wcs_ref.wcs_pix2sky(xc5_2n, yc5_2n, 1)

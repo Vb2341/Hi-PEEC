@@ -34,6 +34,8 @@ import ast
 import datetime
 import subprocess
 
+from multiprocessing import Pool
+
 import logging
 #If there is a problem, set level=logging.DEBUG to get additional information in the log file
 logging.basicConfig(filename='Hi-PEEC.log', filemode='w', level=logging.INFO,
@@ -41,10 +43,9 @@ logging.basicConfig(filename='Hi-PEEC.log', filemode='w', level=logging.INFO,
                     datefmt='%I:%M:%S')
 
 #astronomy utils
-import pyfits
+from astropy.io import fits
 from pyraf import iraf
-import pywcs
-
+from astropy import wcs
 #Import Hi-PEEC modules
 sys.path.insert(0, './source/')
 import filemanagement
@@ -206,7 +207,7 @@ if userinput['DO_GROWTH']:
             else:
                 add_stars = add_stars_list[a]
 
-            image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_sci*')
+            image_list = glob.glob(userinput['DATA'] + '/*' + add_filter + '*_dr?.fits')
             if not image_list:
                 print 'No frame matching additional single star filter'
             else:
@@ -242,18 +243,41 @@ if userinput['DO_PHOT']:
 
     iraf.txdump(center_catalog,'XCENTER,YCENTER','yes',Stdout=fullcat)
 
+    refx, refy = np.loadtxt(fullcat, unpack=True)
+    header_ref = fits.getheader(userinput['DATA'] + '/' + userinput['IMAGE'],'SCI')
+    wcs_ref = wcs.WCS(header_ref)
+
+    # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
+    ra, dec = wcs_ref.wcs_pix2world(refx, refy, 1)
+    skycat = target_dir + '/photometry/fullcat_sky_center.coo'
+    np.savetxt(skycat, np.array([ra,dec]).transpose())
+
     #Use this as input and do all image photometry
 
 
     print ''
     print '\tDoing photometry on full image set:'
 
-    imagelist = glob.glob(userinput['DATA'] + '/*sci*.fits')
+    imagelist = glob.glob(userinput['DATA'] + '/*dr?.fits')
 
     #print progressbar
     i=0
     l = len(imagelist)
-    filemanagement.printProgress(i, l)
+    # filemanagement.printProgress(i, l)
+
+    # Wrapper for Parallelization
+    def mproc_phot(image):
+        filter = extraction.get_filter(image)
+
+        outputfile = target_dir + '/photometry/phot_' + filter + '.mag'
+        # calculate proper aperture to use
+        ap = extraction.calc_aperture(userinput, image)
+
+        #do photometry
+        extraction.photometry(userinput, image, fullcat, outputfile, ap)
+
+    # Parallelize it!
+    # Pool(8).map(mproc_phot, imagelist)
 
     for image in imagelist:
         filter = extraction.get_filter(image)
@@ -261,6 +285,15 @@ if userinput['DO_PHOT']:
         outputfile = target_dir + '/photometry/phot_' + filter + '.mag'
         # calculate proper aperture to use
         ap = extraction.calc_aperture(userinput, image)
+
+
+        # CHANGE COORDS HERE
+        header_ref = fits.getheader(image,'SCI')
+        wcs_ref = wcs.WCS(header_ref)
+
+        # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
+        ix, iy = wcs_ref.wcs_world2pix(refx, refy, 1)
+        np.savetxt(target_dir + '/photometry/tmp.coo',np.array([ix,iy]).transpose())
 
         #do photometry
         extraction.photometry(userinput, image, fullcat, outputfile, ap)
@@ -376,7 +409,7 @@ if userinput['DO_CLUSTERS']:
 
     # Select images
     ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
-    imagelist = glob.glob(userinput['DATA']+'/*sci*.fits')
+    imagelist = glob.glob(userinput['DATA']+'/*dr?.fits')
 
 
     # Recenter the input coordinates

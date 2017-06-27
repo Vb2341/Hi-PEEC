@@ -34,15 +34,38 @@ import logging
 import warnings
 
 # astronomy utils
-import pyfits
+from astropy.io import fits
 from pyraf import iraf
-import pywcs
+from astropy import wcs
+from scipy import interpolate
 
 # Import Hi-PEEC modules
 sys.path.insert(0, './source/')
 import filemanagement
 import extraction
 #-------------------------------------------------------------------------------
+def apcorr_from_ee_sbc(image, r1, r2):
+    """Function deriving apcorr from encircled energy measurements from ACS team
+    @Params:
+    image       (STR)   - Path to image
+    r1          (FLOAT) - Radius of photomteric measurement (arcsec)
+    r2          (FLOAT) - Radius of the desired outer aperture (arcsec)
+
+    @Returns
+    corr        (FLOAT)   - full path to the aperture corrections file
+    """
+    # Interpolate values from ACS ISR 2016-05 measured values
+
+    waves = [1438.2, 1528.0, 1612.2] # Central Wavelengths for F125LP, F140LP, F150LP for ACS/SBC
+    radii = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5]  # radii given in ACS ISR 2016-05
+    measured = np.loadtxt('init/sbc_ee.txt')
+    model = interpolate.interp2d(radii,waves,measured,fill_value=None)
+
+    input_wave = fits.getval(image, 'PHOTPLAM', 1)
+    inner_ee = model(r1, input_wave)
+    outer_ee = model(r2, input_wave)
+
+    return -2.5*np.log(outer_ee/inner_ee)[0]
 
 def apcorr_calc(userinputs):
     """Function for performing IRAF photometry
@@ -88,7 +111,7 @@ def apcorr_calc(userinputs):
     phot_dir = userinputs['OUTDIR'] + '/photometry/'
 
     #Get the list of images
-    imagelist = glob.glob(userinputs['DATA'] + '/*sci*.fits')
+    imagelist = glob.glob(userinputs['DATA'] + '/*dr?.fits')
 
     #Clear old apcorr file
     apcorrfile = userinputs['OUTDIR'] + '/photometry/avg_aperture_correction.txt'
@@ -158,13 +181,23 @@ def apcorr_calc(userinputs):
                 logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
             except RuntimeWarning:
                 logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
-                logging.debug('Check {} and the aperture correction requirements'\
-                             .format(userinputs['STARS']))
-                print ''
-                print '\t WARNING:'
-                print '\t No stars in the apcorr star list for {} after filtering. Check {} and the aperture correction requirements'\
-                    .format(filter, userinputs['STARS'])
-                apcor_avg = 0
+                if fits.getval(image, 'DETECTOR') == 'SBC':
+                    logging.info('Using ACS Team solutions for Encircled energy ')
+                    print ''
+                    print '\t WARNING:'
+                    print '\t No stars in the apcorr star list for {} after filtering. Using outside EE measurements'\
+                        .format(filter, userinputs['STARS'])
+                    im_scale = float(fits.getheader(image)['D001SCAL'])
+                    apcor_avg = apcorr_from_ee_sbc(image, float(ap)*im_scale, 20.*im_scale)
+                else:
+                    logging.debug('Check {} and the aperture correction requirements'\
+                                 .format(userinputs['STARS']))
+                    print ''
+                    print '\t WARNING:'
+                    print '\t No stars in the apcorr star list for {} after filtering. Check {} and the aperture correction requirements'\
+                        .format(filter, userinputs['STARS'])
+
+                    apcor_avg = 0
                 apcor_err = 0
 
         #Save these results to file
@@ -314,7 +347,7 @@ def apply_corrs(userinput, cat):
 
     extinctions = extinctions.loc[['ngc1614']]
 
-    imlist = glob.glob(userinput['DATA'] + '/*sci*.fits')
+    imlist = glob.glob(userinput['DATA'] + '/*dr?.fits')
 
 
     # Load apcorrs
@@ -330,7 +363,7 @@ def apply_corrs(userinput, cat):
         filter = extraction.get_filter(image)
 
         # Get instrument from header
-        instr = pyfits.getheader(image)['INSTRUME']
+        instr = fits.getheader(image)['INSTRUME']
         instr = instr.lower()
 
         # Select the correct extinction
@@ -366,20 +399,20 @@ def insert_WCS(userinput, cat):
         cat (PANDAS DATAFRAME) - dataframe containing the cluster data
     """
     target_dir = userinput['OUTDIR']
-    imlist = glob.glob(userinput['DATA'] + '/*sci*.fits')
+    imlist = glob.glob(userinput['DATA'] + '/*dr?.fits')
 
     # Convert xy coordinates into RA Dec of reference filter
     ref_image = [image for image in imlist if userinput['REF_FILTER'].lower() in image.lower()][0]
 
-    # Get header from reference image using pyfits
-    header_ref = pyfits.getheader(ref_image)
+    # Get header from reference image using fits
+    header_ref = fits.getheader(ref_image)
 
     # Get wcs solution from reference image header
     logging.info('Get and insert WCS coordinates for each source')
-    wcs_ref = pywcs.WCS(header_ref)
+    wcs_ref = wcs.WCS(header_ref)
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
-    ra, dec = wcs_ref.wcs_pix2sky(cat['X'], cat['Y'], 1)
+    ra, dec = wcs_ref.wcs_pix2world(cat['X'], cat['Y'], 1)
     cat.insert(2,'RA',ra)
     cat.insert(3,'DEC',dec)
 

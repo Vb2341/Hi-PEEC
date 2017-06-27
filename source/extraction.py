@@ -30,9 +30,10 @@ import ast
 import logging
 
 #astronomy utils
-import pyfits
+from astropy.io import fits
 from pyraf import iraf
-import pywcs
+from astropy import wcs
+from photutils import aperture_photometry, CircularAperture, CircularAnnulus
 
 #Import Hi-PEEC modules
 sys.path.insert(0, './source/')
@@ -65,7 +66,7 @@ iraf.centerpars.cmaxiter = 3
 iraf.centerpars.maxshift = 1
 
 iraf.unlearn('fitskypars')
-iraf.fitskypars.salgori = 'mode'
+iraf.fitskypars.salgorithm = 'mode'
 
 iraf.unlearn('photpars')
 
@@ -86,14 +87,14 @@ def get_filter(image):
     """
     logging.debug('Retrieving filter for {}'.format(image))
     try:
-        filter = pyfits.getheader(image)['FILTER']
+        filter = fits.getheader(image)['FILTER']
     except KeyError:
         logging.debug('No FILTER key found, trying FILTER1')
         #The 814 image has the filter information under the keyword FILTER2:
-        filter = pyfits.getheader(image)['FILTER1']
+        filter = fits.getheader(image)['FILTER1']
         if filter[0].lower()!='f':
             logging.debug('FILTER1 does not match a filter designation, trying FILTER2')
-            filter = pyfits.getheader(image)['FILTER2']
+            filter = fits.getheader(image)['FILTER2']
             if filter[0].lower()!='f':
                 logging.critical('No valid filter could be found in {}'.format(image))
                 filemanagement.shutdown('No valid filter found in the header on {}'.format(image))
@@ -112,7 +113,7 @@ def calc_aperture(userinput,image):
     ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
     logging.debug('Calculating aperture for {}'.format(image))
 
-    ref_scale = pyfits.getheader(ref_image)['D001SCAL']
+    ref_scale = fits.getheader(ref_image)['D001SCAL']
     # Round to 1 significant digit
     ref_scale = round(ref_scale, -int(np.floor(np.log10(abs(ref_scale)))))
 
@@ -123,7 +124,7 @@ def calc_aperture(userinput,image):
     logging.debug('Calculated aperture size for reference: {}arcsec'.format(ref_apsize))
 
     # Step 2: Calculate required aperture
-    im_scale = pyfits.getheader(image)['D001SCAL']
+    im_scale = fits.getheader(image)['D001SCAL']
 
 
     # Round to 1 significant digit
@@ -147,8 +148,8 @@ def ACS_zeropoint(image):
     """
     logging.debug('Calculating zeropoint for {}'.format(image))
 
-    PHOTFLAM = pyfits.getheader(image)['PHOTFLAM']
-    PHOTPLAM = pyfits.getheader(image)['PHOTPLAM']
+    PHOTFLAM = fits.getheader(image,1)['PHOTFLAM']
+    PHOTPLAM = fits.getheader(image,1)['PHOTPLAM']
 
     ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
 
@@ -235,6 +236,15 @@ def extraction(userinputs):
 
     return target_dir + '/s_extraction/R2_wl_dpop_detarea.cat'
 
+def photutils_phot(catalog, image, radius, annulus, dannulus, zp):
+    data = fits.getdata(image)
+    apertures = CircularAperture(catalog, r=radius)
+    annuli = CircularAnnulus(catalog, r_in=annulus, r_out=annulus+dannulus)
+    apers = [apertures, annuli]
+    phot_table = aperture_photometry(data, apers)
+    final_sum = phot_table['aperture_sum_0'] - phot_table['aperture_sum_1'] / annuli.area() * apertures.area()
+    final_mag = -2.5*np.log(final_sum) - zp
+
 def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
     """Function for performing IRAF photometry
     Inputs:
@@ -283,17 +293,18 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
     #Load zeropoints
     inst_zp, filter_zp, zp_zp = np.loadtxt(target_dir + '/init/Hi-PEEC_zeropoints.tab', unpack=True, dtype='str')
-
+    # print inst_zp, filter_zp, zp_zp
     # Get filter from header
     filter = get_filter(image)
 
 
     # Set the necessary variables for photometry on the reference image
-    exptime = pyfits.getheader(image)['EXPTIME']
+    exptime = fits.getheader(image)['EXPTIME']
     logging.debug('Exposure time from header: {}'.format(exptime))
-    inst = pyfits.getheader(image)['INSTRUME']
+    inst = fits.getheader(image)['INSTRUME']
     logging.debug('Intrument from header: {}'.format(inst))
     inst = inst.lower()
+
 
     match = (inst_zp == inst) & (filter_zp == filter.lower())
     zp = zp_zp[match]
@@ -324,7 +335,11 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     # Set up IRAF params:
     iraf.datapars.epadu = exptime
 
-    iraf.centerpars.calgorithm = 'centroid'
+    # !!!!!!!!!!!!!!!!!
+    # Only center on reference frame
+    iraf.centerpars.calgorithm = 'none'
+    # !!!!!!!!!!!!!!!
+    # CHANGE BACKGROUND ESTIMATE IN ANNULUS TO MODE
 
     # Select the annulus depending on whether it is overwritten in the function call or not
     if annulus == '':
@@ -346,7 +361,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
     logging.debug('Setting zeropoint to {}'.format(zp))
 
     # Do phot
-    iraf.phot(image, catalog, output)
+    iraf.phot(image+'[SCI]', catalog, output)
     #--------------------------------------------------------------------------
 
 
@@ -498,4 +513,3 @@ def growth_curve(userinputs, filter, catalog):
     plt.minorticks_on()
 
     fig.savefig(userinputs['OUTDIR'] + '/plots/plot_growth_curve_{}.pdf'.format(ref_filter))
-

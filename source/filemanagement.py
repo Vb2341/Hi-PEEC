@@ -29,8 +29,7 @@ import string
 import ast
 import logging
 
-#astronomy utils
-import pyfits
+from astropy.io import fits
 
 #------------------------------------------------------------------------------
 
@@ -171,4 +170,3 @@ def setup(userinputs):
 
 def cleanup():
     pass
-
