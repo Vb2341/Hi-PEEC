@@ -44,7 +44,7 @@ sys.path.insert(0, './source/')
 import filemanagement
 import extraction
 #-------------------------------------------------------------------------------
-def apcorr_from_ee_sbc(image, r1, r2):
+def apcorr_from_ee(image, r1, r2):
     """Function deriving apcorr from encircled energy measurements from ACS team
     @Params:
     image       (STR)   - Path to image
@@ -55,10 +55,21 @@ def apcorr_from_ee_sbc(image, r1, r2):
     corr        (FLOAT)   - full path to the aperture corrections file
     """
     # Interpolate values from ACS ISR 2016-05 measured values
+    detector = fits.getval(image, 'DETECTOR', 0)
+    if detector == 'SBC':
+        waves = [1438.2, 1528.0, 1612.2] # Central Wavelengths for F125LP, F140LP, F150LP for ACS/SBC
+        radii = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5]  # radii given in ACS ISR 2016-05
+    elif detector == 'UVIS':
+        waves = np.arange(2,12)*1000. # wavelengths from ee table
+        radii = [.1, .15, .2, .25, .3, .4, .5, .6, .8, 1.0, 1.5, 2.0]  # radii given in WFC3 IHB
+    elif detector == 'WFC':
+        waves = [3500.0, 4000.0, 5000.0, 6000.0, 7000.0, 8000.0, 9000.0, 10000.0, 11000.0]
+        radii = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 4.0]
+    elif detector == 'IR':
+        waves = [7000.0, 8000.0, 9000.0, 10000.0, 11000.0, 12000.0, 13000.0, 14000.0, 15000.0, 16000.0, 17000.0]
+        radii = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 6.0]
 
-    waves = [1438.2, 1528.0, 1612.2] # Central Wavelengths for F125LP, F140LP, F150LP for ACS/SBC
-    radii = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5]  # radii given in ACS ISR 2016-05
-    measured = np.loadtxt('init/sbc_ee.txt')
+    measured = np.loadtxt('init/{}_ee.txt'.format(detector.lower()))
     model = interpolate.interp2d(radii,waves,measured,fill_value=None)
 
     input_wave = fits.getval(image, 'PHOTPLAM', 1)
@@ -66,6 +77,7 @@ def apcorr_from_ee_sbc(image, r1, r2):
     outer_ee = model(r2, input_wave)
 
     return -2.5*np.log(outer_ee/inner_ee)[0]
+
 
 def apcorr_calc(userinputs):
     """Function for performing IRAF photometry
@@ -179,16 +191,17 @@ def apcorr_calc(userinputs):
                 apcor_avg = np.mean(apcor[lim])
                 apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
                 logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
+                apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
             except RuntimeWarning:
                 logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
-                if fits.getval(image, 'DETECTOR') == 'SBC':
-                    logging.info('Using ACS Team solutions for Encircled energy ')
+                if fits.getval(image, 'DETECTOR') in ['SBC', 'IR', 'UVIS', 'WFC']:
+                    logging.info('Using HST instrument team solutions for Encircled energy ')
                     print ''
                     print '\t WARNING:'
                     print '\t No stars in the apcorr star list for {} after filtering. Using outside EE measurements'\
                         .format(filter, userinputs['STARS'])
                     im_scale = float(fits.getheader(image)['D001SCAL'])
-                    apcor_avg = apcorr_from_ee_sbc(image, float(ap)*im_scale, 20.*im_scale)
+                    apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
                 else:
                     logging.debug('Check {} and the aperture correction requirements'\
                                  .format(userinputs['STARS']))
