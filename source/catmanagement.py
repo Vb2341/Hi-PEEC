@@ -59,20 +59,24 @@ def apcorr_from_ee(image, r1, r2):
     if detector == 'SBC':
         waves = [1438.2, 1528.0, 1612.2] # Central Wavelengths for F125LP, F140LP, F150LP for ACS/SBC
         radii = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5]  # radii given in ACS ISR 2016-05
+        ext = 1
     elif detector == 'UVIS':
         waves = np.arange(2,12)*1000. # wavelengths from ee table
         radii = [.1, .15, .2, .25, .3, .4, .5, .6, .8, 1.0, 1.5, 2.0]  # radii given in WFC3 IHB
+        ext = 1
     elif detector == 'WFC':
         waves = [3500.0, 4000.0, 5000.0, 6000.0, 7000.0, 8000.0, 9000.0, 10000.0, 11000.0]
         radii = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 4.0]
+        ext = 1
     elif detector == 'IR':
         waves = [7000.0, 8000.0, 9000.0, 10000.0, 11000.0, 12000.0, 13000.0, 14000.0, 15000.0, 16000.0, 17000.0]
         radii = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 6.0]
+        ext = 0
 
     measured = np.loadtxt('init/{}_ee.txt'.format(detector.lower()))
     model = interpolate.interp2d(radii,waves,measured,fill_value=None)
 
-    input_wave = fits.getval(image, 'PHOTPLAM', 1)
+    input_wave = fits.getval(image, 'PHOTPLAM', ext)
     inner_ee = model(r1, input_wave)
     outer_ee = model(r2, input_wave)
 
@@ -188,7 +192,7 @@ def apcorr_calc(userinputs):
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             try:
-                apcor_avg = np.mean(apcor[lim])
+                apcor_avg_measured = np.mean(apcor[lim])
                 apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
                 logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
                 apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
@@ -233,7 +237,8 @@ def apcorr_calc(userinputs):
         num, bins, patches = plt.hist(apcor, bins=50, range=(-4.0,1.0),
                                       color='red', lw=2, histtype='step')
 
-        plt.vlines(apcor_avg, 0, 1, color='blue', linewidth=5)
+        plt.vlines(apcor_avg, 0, 1, color='blue', linewidth=5, label='model ap cor')
+        plt.vlines(apcor_avg_measured, 0, 1, color='blue', linestyle=':', linewidth=3, label='in-frame ap cor')
         plt.vlines(uplim, 0, 2, color='black', linestyle='--', linewidth=2)
         plt.vlines(lowlim, 0, 2, color='black', linestyle='--', linewidth=2)
 
@@ -241,6 +246,8 @@ def apcorr_calc(userinputs):
         plt.ylabel('N')
         plt.minorticks_on()
         plt.axis([-4.0,1.0, 0, max(num) + 0.1*max(num)])
+
+        plt.legend(loc=2)
 
         fig.savefig(userinputs['OUTDIR'] + '/plots/apcor_' + filter + '.pdf')
 
