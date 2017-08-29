@@ -428,7 +428,7 @@ def insert_WCS(userinput, cat):
     ref_image = [image for image in imlist if userinput['REF_FILTER'].lower() in image.lower()][0]
 
     # Get header from reference image using fits
-    header_ref = fits.getheader(ref_image)
+    header_ref = fits.getheader(ref_image,1)
 
     # Get wcs solution from reference image header
     logging.info('Get and insert WCS coordinates for each source')
