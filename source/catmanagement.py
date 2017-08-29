@@ -436,6 +436,7 @@ def insert_WCS(userinput, cat):
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra, dec = wcs_ref.wcs_pix2world(cat['X'], cat['Y'], 1)
+    print ra, dec
     cat.insert(2,'RA',ra)
     cat.insert(3,'DEC',dec)
 
