@@ -61,7 +61,7 @@ def apcorr_from_ee(image, r1, r2):
         radii = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 2.0, 3.0, 4.0, 5.0, 5.5]  # radii given in ACS ISR 2016-05
         ext = 1
     elif detector == 'UVIS':
-        waves = np.arange(2,12)*1000. # wavelengths from ee table
+        waves = [2000., 3000., 4000., 5000., 6000., 7000., 8000., 9000., 10000., 11000.] # wavelengths from ee table
         radii = [.1, .15, .2, .25, .3, .4, .5, .6, .8, 1.0, 1.5, 2.0]  # radii given in WFC3 IHB
         ext = 1
     elif detector == 'WFC':
@@ -196,6 +196,7 @@ def apcorr_calc(userinputs):
                 apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
                 logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
                 apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
+                measured = True
             except RuntimeWarning:
                 logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
                 if fits.getval(image, 'DETECTOR') in ['SBC', 'IR', 'UVIS', 'WFC']:
@@ -206,6 +207,7 @@ def apcorr_calc(userinputs):
                         .format(filter, userinputs['STARS'])
                     im_scale = float(fits.getheader(image)['D001SCAL'])
                     apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
+                    measured = False
                 else:
                     logging.debug('Check {} and the aperture correction requirements'\
                                  .format(userinputs['STARS']))
@@ -238,7 +240,8 @@ def apcorr_calc(userinputs):
                                       color='red', lw=2, histtype='step')
 
         plt.vlines(apcor_avg, 0, 1, color='blue', linewidth=5, label='model ap cor')
-        plt.vlines(apcor_avg_measured, 0, 1, color='blue', linestyle=':', linewidth=3, label='in-frame ap cor')
+        if measured:
+            plt.vlines(apcor_avg_measured, 0, 1, color='blue', linestyle=':', linewidth=3, label='in-frame ap cor')
         plt.vlines(uplim, 0, 2, color='black', linestyle='--', linewidth=2)
         plt.vlines(lowlim, 0, 2, color='black', linestyle='--', linewidth=2)
 

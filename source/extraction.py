@@ -208,7 +208,7 @@ def extraction(userinputs):
     logging.info('Start sextractor')
     os.chdir(target_dir + '/s_extraction')
     logging.debug('Changed dir to {}'.format(os.getcwd()))
-    command = 'sex ' + userinputs['DATA'] + '/' + seximage + '  -c R2_wl_aa.config'
+    command = 'sex ' + userinputs['DATA'] + '/' + seximage + '[1]  -c R2_wl_aa.config'
     os.system(command)
     os.chdir(target_dir)
     logging.debug('Changed working directory back to {}'.format(target_dir))
@@ -244,6 +244,23 @@ def photutils_phot(catalog, image, radius, annulus, dannulus, zp):
     phot_table = aperture_photometry(data, apers)
     final_sum = phot_table['aperture_sum_0'] - phot_table['aperture_sum_1'] / annuli.area() * apertures.area()
     final_mag = -2.5*np.log(final_sum) - zp
+
+def bg_median(apertures, data):
+    masks = apertures.to_mask()
+    shape = data.shape
+    print('Mean\tMedian\tMode')
+    stats = []
+    for mask in masks:
+        projected_mask = mask.to_image(shape).astype(bool)
+        values = data[projected_mask]
+        med = np.nanmedian(values)
+        mean = np.nanmean(values)
+        mode = 3.*med-2.*mean
+        std = np.nanstd(values)
+        #print('{} {} {}'.format(mean,med,mode))
+        stats.append(mean, med, mode, std)
+    return np.array(stats)
+
 
 def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
     """Function for performing IRAF photometry

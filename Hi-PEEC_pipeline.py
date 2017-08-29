@@ -247,7 +247,7 @@ if userinput['DO_PHOT']:
     header_ref = fits.getheader(userinput['DATA'] + '/' + userinput['IMAGE'],'SCI')
     wcs_ref = wcs.WCS(header_ref)
 
-    # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
+    # Calculate and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra, dec = wcs_ref.wcs_pix2world(refx, refy, 1)
     skycat = target_dir + '/photometry/fullcat_sky_center.coo'
     np.savetxt(skycat, np.array([ra,dec]).transpose())
