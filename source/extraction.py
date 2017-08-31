@@ -366,10 +366,10 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         iraf.fitskypars.annulus = annulus
         logging.debug('Using user specified annulus ({}px)'.format(annulus))
     if dannulus == '':
-        iraf.fitskypars.dannulu = userinputs['D_ANNULUS']
+        iraf.fitskypars.dannulus = userinputs['D_ANNULUS']
         logging.debug('Using annulus width from inputfile ({}px)'.format(userinputs['D_ANNULUS']))
     else:
-        iraf.fitskypars.dannulu = dannulus
+        iraf.fitskypars.dannulus = dannulus
         logging.debug('Using user specified annulus width ({}px)'.format(dannulus))
 
     iraf.photpars.apertures = apertures

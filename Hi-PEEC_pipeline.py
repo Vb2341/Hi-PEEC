@@ -150,6 +150,7 @@ if userinput['MASK_EDGES']:
 
     # Create a new reg file
     # Save region file from extraction catalog
+
     xx, yy, fwhm, class_s, mag = np.loadtxt(extraction_cat, skiprows=5, unpack=True)
     extraction.create_regfile(userinput, xx, yy, 'edges_removed.reg')
 
@@ -292,11 +293,12 @@ if userinput['DO_PHOT']:
         wcs_ref = wcs.WCS(header_ref)
 
         # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
-        ix, iy = wcs_ref.wcs_world2pix(refx, refy, 1)
-        np.savetxt(target_dir + '/photometry/tmp.coo',np.array([ix,iy]).transpose())
+        ix, iy = wcs_ref.wcs_world2pix(ra, dec, 1)
+        tmp_cat = target_dir + '/photometry/tmp.coo'
+        np.savetxt(tmp_cat,np.array([ix,iy]).transpose())
 
         #do photometry
-        extraction.photometry(userinput, image, fullcat, outputfile, ap)
+        extraction.photometry(userinput, image, tmp_cat, outputfile, ap)
         i=i+1
         filemanagement.printProgress(i, l)
 
@@ -328,12 +330,11 @@ if userinput['CREATE_CAT']:
 
     # Get a list of filters from the filenames
     filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
-
     # Create the catalog dataframe
     cat = pd.DataFrame()
 
-    # Get the x y coordinates which are the same for all the filters.
-    x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
+    # Get XY coordinates for the reference filter.  NOT THE SAME FOR ALL FILTERS DUE TO DIFFERING PIXEL SCALES
+    x, y = np.loadtxt(phot_cats[filters.index(userinput['REF_FILTER'])], unpack=True, usecols=(0,1))
     cat['X'] = x
     cat['Y'] = y
 
@@ -381,7 +382,7 @@ if userinput['CREATE_CAT']:
 
     cat.reset_index(drop=True, inplace=True) #make sure ID numbers are reset to filtered cat.
     cat.to_csv(target_dir+'/final_cat_'+userinput['TARGET'] + '_' + date + '.cat',
-               sep='\t', float_format = '%.3f')
+               sep='\t', float_format = '%.8f')
     print ''
     nr_of_clusters = len (cat['X'])
     print '\t Number of clusters in the final catalogue: {}'.format(nr_of_clusters)
@@ -464,11 +465,12 @@ if userinput['DO_CLUSTERS']:
     # Get a list of filters from the filenames
     filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
 
+
     # Create the catalog dataframe
     mancat = pd.DataFrame()
 
     # Get the x y coordinates which are the same for all the filters.
-    x, y = np.loadtxt(phot_cats[filters==userinput['REF_FILTER']], unpack=True, usecols=(0,1))
+    x, y = np.loadtxt(phot_cats[filters.index(userinput['REF_FILTER'])], unpack=True, usecols=(0,1))
     mancat['X'] = x
     mancat['Y'] = y
 

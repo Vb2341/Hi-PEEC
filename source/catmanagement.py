@@ -79,8 +79,8 @@ def apcorr_from_ee(image, r1, r2):
     input_wave = fits.getval(image, 'PHOTPLAM', ext)
     inner_ee = model(r1, input_wave)
     outer_ee = model(r2, input_wave)
-
-    return -2.5*np.log(outer_ee/inner_ee)[0]
+    # print image, r1, r2, inner_ee, outer_ee
+    return -2.5*np.log10(outer_ee/inner_ee)[0]
 
 
 def apcorr_calc(userinputs):
@@ -151,7 +151,7 @@ def apcorr_calc(userinputs):
             starfile = userinputs['STARS']
 
         print filter
-        print starfile
+        # print starfile
         logging.info('Using {} as star input for apcorr'.format(starfile))
 
         #-----------------------------------------------------------------------
@@ -436,7 +436,7 @@ def insert_WCS(userinput, cat):
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra, dec = wcs_ref.wcs_pix2world(cat['X'], cat['Y'], 1)
-    print ra, dec
+    print type(cat)
     cat.insert(2,'RA',ra)
     cat.insert(3,'DEC',dec)
 

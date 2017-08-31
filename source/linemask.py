@@ -166,7 +166,8 @@ def remove_edgedetections(catalog, ref, lines):
 
     with open(catalog,'r') as f:
         lines = f.readlines()
-    i=0
+    i = 0
+    kept = 0
     with open(catalog,'w') as f:
         for line in lines:
             if line.startswith('#') == True:
@@ -177,7 +178,14 @@ def remove_edgedetections(catalog, ref, lines):
                 if mask[y,x] == 1:
                     l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
                     f.write(l)
-                i+=1
+                    kept += 1
+                i += 1
+
+    print 'Keeping {} of {} detections'.format(kept, i)
+    if kept < 1:
+        print 'WARNING: NO DETECTIONS KEPT AFTER EDGE MASKING, CATALOGS WILL BE EMPTY.\nCheck Region file.'
+        logging.info('Edge masking removed all detected sources')
+
 
 def select_regfile(files):
     if len(files)>1:
