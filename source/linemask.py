@@ -162,26 +162,41 @@ def remove_edgedetections(catalog, ref, lines):
 
     mask = create_mask(ref, lines)
 
-
     xx, yy, fwhm, class_s, mag = np.loadtxt(catalog, skiprows=5, unpack=True)
 
-    with open(catalog,'r') as f:
-        lines = f.readlines()
-    i=0
-    with open(catalog,'w') as f:
-        for line in lines:
-            if line.startswith('#') == True:
-                f.write(line)
-            else:
-                x = xx[i]
-                y = yy[i]
-                if mask[y,x] == 1:
-                    l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
-                    f.write(l)
-                i+=1
+    # Read in and keep sources from catalog
+    with open(catalog, 'r') as f:
+        sourcelines = f.readlines()
+
+    # Non destructively assemble new file
+    newLines = []
+    i = 0
+    for line in sourcelines:
+        if line.startswith('#'):
+            newLines.append(line)
+
+        else:
+            # Use round and int to make sure that indices are proper integers
+            # errors using this should be <= half pixel
+            x = int(np.round(xx[i]))
+            y = int(np.round(yy[i]))
+            if mask[y, x] == 1:
+                newLines.append('{}\t{}\t{}\t{}\t{}\n'.format(xx[i],
+                                                              yy[i],
+                                                              fwhm[i],
+                                                              class_s[i],
+                                                              mag[i]))
+            # Increment linecount
+            i += 1
+
+    # If nothing bad occured in setting up the new lines: write back to file
+    with open(catalog, 'w') as f:
+        for l in newLines:
+            f.write(l)
+
 
 def select_regfile(files):
-    if len(files)>1:
+    if len(files) > 1:
         print 'There are multiple reg files in the init directory'
         logging.info('Multiple .reg files found')
         for a in range(len(files)):
