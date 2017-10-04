@@ -17,6 +17,7 @@
 from __future__ import division#,print_function
 
 import sys
+import traceback
 import scipy as S
 import numpy as np
 from astropy.io import fits
@@ -245,6 +246,6 @@ def mask_edges(userinput,extraction_cat):
     except Exception as e:
         print 'Edge masking failed. Proceeding without it.'
         logging.info('Edgemasking failed. No mask has been applied')
-        print sys.exc_traceback()
+        print traceback.print_exc()
         sys.exit(0)
         return 0
