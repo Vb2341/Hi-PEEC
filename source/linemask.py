@@ -260,6 +260,7 @@ def mask_edges(userinput,extraction_cat):
         return 1
     except Exception as e:
         print 'Edge masking failed. Proceeding without it.'
-        logging.info('Edgemasking failed. No mask has been applied')
+        logging.warning('Edgemasking failed. No mask has been applied')
+        logging.warning('Edgemask traceback: {}'.format(traceback.print_exc()))
         print traceback.print_exc()
         return 0
