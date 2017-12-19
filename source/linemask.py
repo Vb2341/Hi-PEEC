@@ -175,7 +175,7 @@ def remove_edgedetections(catalog, ref, lines):
             else:
                 x = xx[i]
                 y = yy[i]
-                if mask[y,x] == 1:
+                if mask[int(y),int(x)] == 1:
                     l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
                     f.write(l)
                     kept += 1

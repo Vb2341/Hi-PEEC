@@ -111,28 +111,28 @@ def calc_aperture(userinput,image):
     """
     # Step 1: Calculate the physical size of the aperture
     ref_image = userinput['DATA'] + '/' + userinput['IMAGE']
-    logging.debug('Calculating aperture for {}'.format(image))
+    logging.info('Calculating aperture for {}'.format(image))
 
     ref_scale = fits.getheader(ref_image)['D001SCAL']
     # Round to 1 significant digit
-    ref_scale = round(ref_scale, -int(np.floor(np.log10(abs(ref_scale)))))
+    # ref_scale = round(ref_scale, -int(np.floor(np.log10(abs(ref_scale)))))
 
 
     ref_ap = userinput['AP_RAD']
-    ref_apsize = ref_ap * float(ref_scale)
+    ref_apsize = float(ref_ap) * float(ref_scale)
 
-    logging.debug('Calculated aperture size for reference: {}arcsec'.format(ref_apsize))
+    logging.info('Calculated aperture size for reference: {}arcsec'.format(ref_apsize))
 
     # Step 2: Calculate required aperture
     im_scale = fits.getheader(image)['D001SCAL']
 
 
     # Round to 1 significant digit
-    im_scale = round(im_scale, -int(np.floor(np.log10(abs(im_scale)))))
+    # im_scale = round(im_scale, -int(np.floor(np.log10(abs(im_scale)))))
 
     aperture = ref_apsize / float(im_scale)
 
-    logging.debug('Calculated aperture for image: {}px'.format(aperture))
+    logging.info('Calculated aperture for image: {}px'.format(aperture))
 
     return str(aperture)
 
@@ -262,7 +262,7 @@ def bg_median(apertures, data):
     return np.array(stats)
 
 
-def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus=''):
+def photometry(userinputs, image, catalog, outputname, apertures, annulus='', dannulus='', recenter=False):
     """Function for performing IRAF photometry
     Inputs:
         userinputs  (dict)  - dictionary with results from the user input file.
@@ -273,6 +273,7 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         annulus     (FLOAT) - (optional) which skyannulus to use, if not set the one defined in
                               user inputs is used
         dannulus    (FLOAT) - (optional) which diameter to use for the sky annulus
+        Recenter    (BOOL)  - (optional) Recompute centers of sources?
 
     Outputs:
         output      (STR)   - full path to the final catalog file
@@ -354,7 +355,10 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
 
     # !!!!!!!!!!!!!!!!!
     # Only center on reference frame
-    iraf.centerpars.calgorithm = 'none'
+    if recenter:
+        iraf.centerpars.calgorithm = 'centroid'
+    else:
+        iraf.centerpars.calgorithm = 'none'
     # !!!!!!!!!!!!!!!
     # CHANGE BACKGROUND ESTIMATE IN ANNULUS TO MODE
 

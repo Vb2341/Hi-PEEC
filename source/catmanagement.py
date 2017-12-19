@@ -44,7 +44,7 @@ sys.path.insert(0, './source/')
 import filemanagement
 import extraction
 #-------------------------------------------------------------------------------
-def apcorr_from_ee(image, r1, r2):
+def apcorr_from_ee(image, r1, r2, ann, dann):
     """Function deriving apcorr from encircled energy measurements from ACS team
     @Params:
     image       (STR)   - Path to image
@@ -55,6 +55,7 @@ def apcorr_from_ee(image, r1, r2):
     corr        (FLOAT)   - full path to the aperture corrections file
     """
     # Interpolate values from ACS ISR 2016-05 measured values
+    print ''
     detector = fits.getval(image, 'DETECTOR', 0)
     if detector == 'SBC':
         waves = [1438.2, 1528.0, 1612.2] # Central Wavelengths for F125LP, F140LP, F150LP for ACS/SBC
@@ -73,14 +74,30 @@ def apcorr_from_ee(image, r1, r2):
         radii = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 6.0]
         ext = 0
 
+
     measured = np.loadtxt('init/{}_ee.txt'.format(detector.lower()))
     model = interpolate.interp2d(radii,waves,measured,fill_value=None)
 
     input_wave = fits.getval(image, 'PHOTPLAM', ext)
     inner_ee = model(r1, input_wave)
     outer_ee = model(r2, input_wave)
+
+    # Since the background is evaluated at small radius, PSF flux comes out too
+    # Correction factor = True_EE / (TrueEE - AnnFlux * pi * Aperture_radius^2)
+    # AnnFlux = Delta_EE_ann+dann_to_dann / (AnnArea)
+    delta_ee_bg = model(ann+dann, input_wave) - model(ann, input_wave)
+    ann_area = (ann + dann) ** 2.0 - ann ** 2.0
+    delta_flux_bg = (r1 ** 2.0) * (delta_ee_bg / ann_area)
+    bg_corr = 1.0 / (1.0 - (delta_flux_bg / inner_ee))
+
+    bg_ap_corr = -2.5 * np.log10(bg_corr)[0]
     # print image, r1, r2, inner_ee, outer_ee
-    return -2.5*np.log10(outer_ee/inner_ee)[0]
+    ap_corr = -2.5 * np.log10(outer_ee / inner_ee)[0]
+    corr = ap_corr + bg_ap_corr
+    logging.info('Radii used - Inner: {} Outer: {}, Ann: {}, Dann: {}'.format(r1, r2, ann, dann))
+    logging.info('Ap corr: {} BG Ap Corr: {}'.format(ap_corr, bg_ap_corr))
+    logging.info('Actually using {} as aperture correction'.format(corr))
+    return corr
 
 
 def apcorr_calc(userinputs):
@@ -189,13 +206,20 @@ def apcorr_calc(userinputs):
         # Limit range of aperture corrections allowed to go into average
         lim = (apcor < uplim) & (apcor > lowlim)
         apcor_lim = apcor[lim]
+
+        ref_scale = fits.getval(userinputs['DATA']+'/'+userinputs['IMAGE'], 'D001SCAL', ext=0)
+        ann_sky = userinputs['ANNULUS'] * ref_scale
+        dann_sky = userinputs['D_ANNULUS'] * ref_scale
+        ap_sky = userinputs['AP_RAD'] * ref_scale
+        infinite_sky = 20. * ref_scale
+
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             try:
                 apcor_avg_measured = np.mean(apcor[lim])
                 apcor_err = np.std(apcor_lim)/np.sqrt(len(apcor_lim))
                 logging.info('Nr of stars in {} apcorr mean: {}'.format(filter,len(apcor[lim])))
-                apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
+                apcor_avg = apcorr_from_ee(image, ap_sky, infinite_sky, ann_sky, dann_sky)
                 measured = True
             except RuntimeWarning:
                 logging.warning('No stars in the apcorr star list for {} after filtering.'.format(filter))
@@ -206,7 +230,7 @@ def apcorr_calc(userinputs):
                     print '\t No stars in the apcorr star list for {} after filtering. Using outside EE measurements'\
                         .format(filter, userinputs['STARS'])
                     im_scale = float(fits.getheader(image)['D001SCAL'])
-                    apcor_avg = apcorr_from_ee(image, float(ap)*im_scale, 20.*im_scale)
+                    apcor_avg = apcorr_from_ee(image, ap_sky, infinite_sky, ann_sky, dann_sky)
                     measured = False
                 else:
                     logging.debug('Check {} and the aperture correction requirements'\
@@ -436,7 +460,7 @@ def insert_WCS(userinput, cat):
 
     # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra, dec = wcs_ref.wcs_pix2world(cat['X'], cat['Y'], 1)
-    print type(cat)
+
     cat.insert(2,'RA',ra)
     cat.insert(3,'DEC',dec)
 

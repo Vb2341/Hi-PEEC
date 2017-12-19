@@ -229,32 +229,33 @@ if userinput['DO_GROWTH']:
 if userinput['DO_PHOT']:
     logging.info('RUNNING SCIENCE PHOTOMETRY')
 
-    #Do an initial centering photometry run
+    #Do an initial centering photometry run and compute concentration index
     print ''
     print 'Running science photometry step'
     print '\t Centering coordinates'
     extraction.photometry(userinput, userinput['IMAGE'],
                                    extraction_cat, 'centercoords.mag',
-                                   str(userinput['AP_RAD']))
+                                   '1,3',
+                                   recenter=True)
 
     center_catalog = target_dir + '/photometry/centercoords.mag'
 
     fullcat = target_dir + '/photometry/fullcat_ref_center.coo'
     filemanagement.remove_if_exists(fullcat)
 
-    iraf.txdump(center_catalog,'XCENTER,YCENTER','yes',Stdout=fullcat)
-
-    refx, refy = np.loadtxt(fullcat, unpack=True)
+    iraf.txdump(center_catalog,'XCENTER,YCENTER,MAG[1-2]','yes',Stdout=fullcat)
+    refx, refy, mag1, mag3 = np.genfromtxt(fullcat, missing_values='INDEF',
+                                           filling_values=np.nan,unpack=True)
+    concentration_index = mag1 - mag3
     header_ref = fits.getheader(userinput['DATA'] + '/' + userinput['IMAGE'],'SCI')
     wcs_ref = wcs.WCS(header_ref)
-
+    ref_scale = fits.getval(userinput['DATA']+'/'+userinput['IMAGE'], 'D001SCAL', ext=0)
     # Calculate and Dec for xy coordinates. 1 refers to origin of image in ds9.
     ra, dec = wcs_ref.wcs_pix2world(refx, refy, 1)
     skycat = target_dir + '/photometry/fullcat_sky_center.coo'
     np.savetxt(skycat, np.array([ra,dec]).transpose())
 
     #Use this as input and do all image photometry
-
 
     print ''
     print '\tDoing photometry on full image set:'
@@ -287,18 +288,21 @@ if userinput['DO_PHOT']:
         # calculate proper aperture to use
         ap = extraction.calc_aperture(userinput, image)
 
+        img_scale = fits.getval(image, 'D001SCAL', ext=0)
+        ann = userinput['ANNULUS'] * ref_scale / img_scale
+        dann = userinput['D_ANNULUS'] * ref_scale / img_scale
 
         # CHANGE COORDS HERE
-        header_ref = fits.getheader(image,'SCI')
-        wcs_ref = wcs.WCS(header_ref)
+        header_img = fits.getheader(image,'SCI')
+        wcs_img = wcs.WCS(header_img)
 
         # Calculate RA and Dec for xy coordinates. 1 refers to origin of image in ds9.
-        ix, iy = wcs_ref.wcs_world2pix(ra, dec, 1)
+        ix, iy = wcs_img.wcs_world2pix(ra, dec, 1)
         tmp_cat = target_dir + '/photometry/tmp.coo'
         np.savetxt(tmp_cat,np.array([ix,iy]).transpose())
 
         #do photometry
-        extraction.photometry(userinput, image, tmp_cat, outputfile, ap)
+        extraction.photometry(userinput, image, tmp_cat, outputfile, ap, ann, dann)
         i=i+1
         filemanagement.printProgress(i, l)
 
@@ -332,11 +336,14 @@ if userinput['CREATE_CAT']:
     filters = [os.path.basename(i).split('_')[-1].split('.')[0] for i in phot_cats]
     # Create the catalog dataframe
     cat = pd.DataFrame()
+    print 'THE XY CATALOG IS {}'.format(phot_cats[filters.index(userinput['REF_FILTER'])])
 
     # Get XY coordinates for the reference filter.  NOT THE SAME FOR ALL FILTERS DUE TO DIFFERING PIXEL SCALES
     x, y = np.loadtxt(phot_cats[filters.index(userinput['REF_FILTER'])], unpack=True, usecols=(0,1))
     cat['X'] = x
     cat['Y'] = y
+    cat['CI'] = concentration_index
+    cat['CI'].replace(np.nan,99.999,inplace=True) # Replace CI nans with 99.999
 
     # Generate column labels
     maglabels = ['Mag ' + s for s in filters]
