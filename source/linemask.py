@@ -17,6 +17,7 @@
 from __future__ import division#,print_function
 
 import sys
+import traceback
 import scipy as S
 import numpy as np
 from astropy.io import fits
@@ -161,34 +162,42 @@ def remove_edgedetections(catalog, ref, lines):
 
     mask = create_mask(ref, lines)
 
-
     xx, yy, fwhm, class_s, mag = np.loadtxt(catalog, skiprows=5, unpack=True)
 
-    with open(catalog,'r') as f:
-        lines = f.readlines()
-    i = 0
-    kept = 0
-    with open(catalog,'w') as f:
-        for line in lines:
-            if line.startswith('#') == True:
-                f.write(line)
-            else:
-                x = xx[i]
-                y = yy[i]
-                if mask[int(y),int(x)] == 1:
-                    l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
-                    f.write(l)
-                    kept += 1
-                i += 1
 
-    print 'Keeping {} of {} detections'.format(kept, i)
-    if kept < 1:
-        print 'WARNING: NO DETECTIONS KEPT AFTER EDGE MASKING, CATALOGS WILL BE EMPTY.\nCheck Region file.'
-        logging.info('Edge masking removed all detected sources')
+    # Read in and keep sources from catalog
+    with open(catalog, 'r') as f:
+        sourcelines = f.readlines()
+
+    # Non destructively assemble new file
+    newLines = []
+    i = 0
+    for line in sourcelines:
+        if line.startswith('#'):
+            newLines.append(line)
+
+        else:
+            # Use round and int to make sure that indices are proper integers
+            # errors using this should be <= half pixel
+            x = int(np.round(xx[i]))
+            y = int(np.round(yy[i]))
+            if mask[y, x] == 1:
+                newLines.append('{}\t{}\t{}\t{}\t{}\n'.format(xx[i],
+                                                              yy[i],
+                                                              fwhm[i],
+                                                              class_s[i],
+                                                              mag[i]))
+            # Increment linecount
+            i += 1
+
+    # If nothing bad occured in setting up the new lines: write back to file
+    with open(catalog, 'w') as f:
+        for l in newLines:
+            f.write(l)
 
 
 def select_regfile(files):
-    if len(files)>1:
+    if len(files) > 1:
         print 'There are multiple reg files in the init directory'
         logging.info('Multiple .reg files found')
         for a in range(len(files)):
@@ -252,7 +261,7 @@ def mask_edges(userinput,extraction_cat):
         return 1
     except Exception as e:
         print 'Edge masking failed. Proceeding without it.'
-        logging.info('Edgemasking failed. No mask has been applied')
-        print sys.exc_traceback()
-        sys.exit(0)
+        logging.warning('Edgemasking failed. No mask has been applied')
+        logging.warning('Edgemask traceback: {}'.format(traceback.print_exc()))
+        print traceback.print_exc()
         return 0
