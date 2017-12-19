@@ -168,18 +168,37 @@ def remove_edgedetections(catalog, ref, lines):
         lines = f.readlines()
     i = 0
     kept = 0
-    with open(catalog,'w') as f:
-        for line in lines:
-            if line.startswith('#') == True:
-                f.write(line)
-            else:
-                x = xx[i]
-                y = yy[i]
-                if mask[int(y),int(x)] == 1:
-                    l = '{}\t{}\t{}\t{}\t{}\n'.format(x, y, fwhm[i], class_s[i], mag[i] )
-                    f.write(l)
-                    kept += 1
-                i += 1
+
+    with open(catalog, 'r') as f:
+        sourcelines = f.readlines()
+
+    # Non destructively assemble new file
+    newLines = []
+    i = 0
+    for line in sourcelines:
+        if line.startswith('#'):
+            newLines.append(line)
+
+        else:
+            # Use round and int to make sure that indices are proper integers
+            # errors using this should be <= half pixel
+            x = int(np.round(xx[i]))
+            y = int(np.round(yy[i]))
+            if mask[y, x] == 1:
+                newLines.append('{}\t{}\t{}\t{}\t{}\n'.format(xx[i],
+                                                              yy[i],
+                                                              fwhm[i],
+                                                              class_s[i],
+                                                              mag[i]))
+            # Increment linecount
+            i += 1
+            # Increment keep counter
+            kept += 1
+
+    # If nothing bad occured in setting up the new lines: write back to file
+    with open(catalog, 'w') as f:
+        for l in newLines:
+            f.write(l)
 
     print 'Keeping {} of {} detections'.format(kept, i)
     if kept < 1:
@@ -252,7 +271,7 @@ def mask_edges(userinput,extraction_cat):
         return 1
     except Exception as e:
         print 'Edge masking failed. Proceeding without it.'
-        logging.info('Edgemasking failed. No mask has been applied')
-        print sys.exc_traceback()
-        sys.exit(0)
+        logging.warning('Edgemasking failed. No mask has been applied')
+        logging.warning('Edgemask traceback: {}'.format(traceback.print_exc()))
+        print traceback.print_exc()
         return 0
