@@ -77,8 +77,8 @@ def get_ends(l,header):
         ra1,dec1 = convert_to_decimal(l[0],l[1])
         ra2,dec2 = convert_to_decimal(l[2],l[3])
 
-        x1,y1 = wcs_ref.wcs_sky2pix(ra1, dec1, 1)
-        x2,y2 = wcs_ref.wcs_sky2pix(ra2, dec2, 1)
+        x1,y1 = wcs_ref.all_world2pix(ra1, dec1, 1)
+        x2,y2 = wcs_ref.all_world2pix(ra2, dec2, 1)
 
     if x1 == x2: x1 += 1.  # do not permit x1=x2, otherwise gradient undefined.
     return x1, y1, x2, y2
@@ -115,6 +115,7 @@ def create_mask(ref, lines):
     dat  = [ l.replace("line(", "").split(")")[0].split(",")  for l in getlines(fnLines) if l.startswith("line") ]
 
     head   = fits.getheader(fnRef)
+    head1   = fits.getheader(fnRef, 1)
     img    = fits.getdata(fnRef)
     mask   = S.ones_like(img)
     Ny, Nx = img.shape
@@ -125,7 +126,7 @@ def create_mask(ref, lines):
     for i in range(Ny): dy[i]   = i+1
 
     for d in dat :
-        x1, y1, x2, y2 = get_ends(d,head)
+        x1, y1, x2, y2 = get_ends(d,head1)
         #print x1, y1, "  ->  ", x2, y2
         edge_near = get_nearedge(x1, y1, x2, y2, Nx, Ny)
         m, c = get_fn(x1, y1, x2, y2)
@@ -145,7 +146,7 @@ def create_mask(ref, lines):
         else           : ind = dy < (m*dx + c)
         mask[ind]  = 0.
 
-    fits.writeto('mask.fits', mask, header=head, clobber=True)
+    fits.writeto('mask.fits', mask, header=head1, clobber=True)
 
     return mask
 

@@ -5,26 +5,26 @@
 
 #Target params
 #---------------------------------------------------------------------------------------
-TARGET      ngc1614                             # 1 target unique identifier
-DISTANCE    67.8                                # 2 distance to target in units of Mpc
+TARGET      NGC2976                             # 1 target unique identifier
+DISTANCE    3.6                               # 2 distance to target in units of Mpc
 #---------------------------------------------------------------------------------------
 
 
 #Folder setup
 #---------------------------------------------------------------------------------------
 SETUP       True                                # 3 set up directories etc? (True/False)
-DATA        /Users/vbajaj/Documents/hipeec/data/NGC1614     # 4 Directory where image files are located
+DATA        /astro/sabbi/GHARIAL/NGC2976     # 4 Directory where image files are located
                                                 #   (specify as full path(without ending / )
-OUTDIR      /Users/vbajaj/Documents/hipeec/output    # 5 Output directory.
+OUTDIR      /astro/sabbi/GHARIAL/NGC2976/output    # 5 Output directory.
                                                 #   (specify as full path(without ending / )
 #---------------------------------------------------------------------------------------
 
 
 #Extraction parameters
 #---------------------------------------------------------------------------------------
-EXTRACT     False                                 # 6 Run source extraction   (True/False)
-IMAGE       F555W_NGC1614_WFC3_UVIS_drc.fits # 7 Sextractor input reference image
-REF_FILTER  F555W                                # 8 Filter to be used as reference
+EXTRACT     True                                 # 6 Run source extraction   (True/False)
+IMAGE       F606W_NGC2976_ACS_WFC_drc.fits # 7 Sextractor input reference image
+REF_FILTER  F606W                                # 8 Filter to be used as reference
 
 MASK_EDGES  True                                 # 9 Whether to remove spurious edge detections
 #---------------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ MASK_EDGES  True                                 # 9 Whether to remove spurious 
 DO_PHOT     True                                # 8 Whether to do photometry(True/False)
 DO_GROWTH   True                                # 9 Whether to create a growth curve (True/False)
 AP_RAD      3.                                 # 10  aperture radius (<7 pixels)  CONSIDER REDUCING
-ANNULUS     5.                                   # 11 Skyannulus size (pixels)
+ANNULUS     7.                                   # 11 Skyannulus size (pixels)
 D_ANNULUS   1.                                   # 12 Skyannulus width (pixels)
 #---------------------------------------------------------------------------------------
 

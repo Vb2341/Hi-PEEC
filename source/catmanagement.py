@@ -73,19 +73,38 @@ def apcorr_from_ee(image, r1, r2, ann, dann):
         waves = [7000.0, 8000.0, 9000.0, 10000.0, 11000.0, 12000.0, 13000.0, 14000.0, 15000.0, 16000.0, 17000.0]
         radii = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 6.0]
         ext = 0
-
-
+    elif detector == 'HRC':
+        # HRC EE is by filter, not wavelength
+        radii = [ 0.05,  0.1,  0.15,  0.2,  0.25,  0.3,  0.35,  0.4,  0.45, 0.5,  1. ,  2. ]
+        hrc_filts = ['F220W', 'F250W', 'F330W', 'F344N', 'F435W', 'F475W', 'F502N', 'F555W', 'F550M', 'F606W', 'F625W', 'F658N', 'F660N', 'F775W', 'F814W', 'F892N', 'F850LP']
+    
     measured = np.loadtxt('init/{}_ee.txt'.format(detector.lower()))
-    model = interpolate.interp2d(radii,waves,measured,fill_value=None)
+    if detector != 'HRC':    
+        model = interpolate.interp2d(radii,waves,measured,fill_value=None)
 
-    input_wave = fits.getval(image, 'PHOTPLAM', ext)
-    inner_ee = model(r1, input_wave)
-    outer_ee = model(r2, input_wave)
+        input_wave = fits.getval(image, 'PHOTPLAM', ext)
+        inner_ee = model(r1, input_wave)
+        outer_ee = model(r2, input_wave)
 
-    # Since the background is evaluated at small radius, PSF flux comes out too
-    # Correction factor = True_EE / (TrueEE - AnnFlux * pi * Aperture_radius^2)
-    # AnnFlux = Delta_EE_ann+dann_to_dann / (AnnArea)
-    delta_ee_bg = model(ann+dann, input_wave) - model(ann, input_wave)
+        # Since the background is evaluated at small radius, PSF flux comes out too
+        # Correction factor = True_EE / (TrueEE - AnnFlux * pi * Aperture_radius^2)
+        # AnnFlux = Delta_EE_ann+dann_to_dann / (AnnArea)
+        delta_ee_bg = model(ann+dann, input_wave) - model(ann, input_wave)
+    else:
+        filt = fits.getval(image, 'filter1')
+        if 'CLEAR' in filt:
+            filt = fits.getval(image, 'filter2')
+        filt_ind = hrc_filts.index(filt)
+        ee_vals = measured[filt_ind]
+        
+        model = interpolate.interp1d(radii, ee_vals, fill_value=None)
+        
+        inner_ee = model(r1)
+        outer_ee = model(r2)
+        
+        # See comment in other if case
+        delta_ee_bg = model(ann+dann) - model(ann)
+        
     ann_area = (ann + dann) ** 2.0 - ann ** 2.0
     delta_flux_bg = (r1 ** 2.0) * (delta_ee_bg / ann_area)
     bg_corr = 1.0 / (1.0 - (delta_flux_bg / inner_ee))
@@ -295,8 +314,10 @@ def BVI_detection(cat, filters, userinput):
     """
     if 'F438W' in filters:
         B = 'F438W'
-    else:
+    elif 'F435W' in filters:
         B = 'F435W'
+    else:
+        B = 'F475W'
 
     if 'F555W' in filters:
         V = 'F555W'

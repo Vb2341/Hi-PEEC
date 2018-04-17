@@ -154,6 +154,24 @@ def ACS_zeropoint(image):
     ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
 
     return ABMAG_ZEROPOINT
+    
+def WFC3_zeropoint(image):
+    """
+    Calculates the zeropoint for WFC3 images from the header info and returns it
+    @params
+    image (STR)     - path to image file
+
+    @returns
+    zeropoint (FLOAT)    - magnitude zeropoint for frame
+    """
+    logging.debug('Calculating zeropoint for {}'.format(image))
+
+    PHOTFLAM = fits.getheader(image)['PHOTFLAM']
+    PHOTPLAM = fits.getheader(image)['PHOTPLAM']
+
+    ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
+
+    return ABMAG_ZEROPOINT
 
 
 def create_regfile(userinput, x, y, filename, color='blue', width=2):
@@ -335,6 +353,9 @@ def photometry(userinputs, image, catalog, outputname, apertures, annulus='', da
         if inst == 'acs':
             logging.debug('Zeropoint not found in file, passing to ACS calculation')
             zp = ACS_zeropoint(image)
+        elif inst == 'wfc3':
+            logging.debug('Zeropoint not found in file, passing to WFC3 calculation')
+            zp = WFC3_zeropoint(image)
         else:
             logging.critical('No matching zeropoint found. Quitting.')
             logging.debug('No zeropoint match found for filter {} with instrument {}'\
