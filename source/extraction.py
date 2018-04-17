@@ -167,7 +167,10 @@ def WFC3_zeropoint(image):
     logging.debug('Calculating zeropoint for {}'.format(image))
 
     PHOTFLAM = fits.getheader(image)['PHOTFLAM']
-    PHOTPLAM = fits.getheader(image)['PHOTPLAM']
+    try:
+        PHOTPLAM = fits.getheader(image)['PHOTPLAM']
+    except:
+        PHOTPLAM = fits.getheader(image, 1)['PHOTPLAM']
 
     ABMAG_ZEROPOINT=-2.5*np.log10(PHOTFLAM)-5*np.log10(PHOTPLAM)-2.408
 
